@@ -4,10 +4,10 @@
 
 ## Contents
 
-- `impact-analysis.md` — Why this solution is useful for El Salvador's Bitcoin ecosystem
-- `operational-model.md` — How the project would be maintained
+- `impact-analysis.md` — Why this solution matters for El Salvador's Bitcoin ecosystem
+- `operational-model.md` — How the project would be maintained and scaled
 - `work-log.md` — Link to Google Doc with edit history
 
 ## Work Log
-<!-- Pegar aquí el link al Google Doc con acceso Viewer/Editor -->
+
 Google Doc: [link]

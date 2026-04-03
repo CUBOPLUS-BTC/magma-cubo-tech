@@ -1,52 +1,265 @@
-# Python
+# =============================================================================
+# SATSSCORE - .gitignore
+# Comprehensive ignore patterns for Python/FastAPI backend + Flutter frontend
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# PYTHON / BACKEND
+# -----------------------------------------------------------------------------
+
+# Byte-compiled / optimized
 __pycache__/
 *.py[cod]
+*.pyc
 *.pyo
 *.pyd
 .Python
-*.egg-info/
-dist/
+
+# Distribution / packaging
 build/
-.eggs/
+dist/
+*.egg-info/
 *.egg
+*.whl
+*.tar.gz
+*.zip
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
 
 # Virtual environments
 .venv/
 venv/
-env/
 ENV/
-
-# Environment variables
+env/
 .env
-*.env
-!*.env.example
 
-# SQLite database files
+# FastAPI / Uvicorn
+*.log
+
+# Alembic (migrations)
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+
+# SQLite databases
 *.db
 *.sqlite
 *.sqlite3
+satsscore.db
 
-# IDE
+# -----------------------------------------------------------------------------
+# FLUTTER / FRONTEND
+# -----------------------------------------------------------------------------
+
+# Flutter build outputs
+frontend/build/
+frontend/.dart_tool/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/pubspec.lock
+
+# Flutter-specific IDE
+.flutter-plugins-shared
+
+# Web build artifacts
+frontend/web/build/
+frontend/web/.packages
+frontend/web/.dartignore
+frontend/web/manifest.json
+
+# iOS / macOS
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/app.flx
+frontend/ios/Flutter/app.zip
+frontend/ios/Flutter/flutter_assets/
+frontend/ios/ServiceDefinitions.json
+frontend/ios/Runner/GoogleService-Info.plist
+frontend/ios/Runner/PrivacyInfo.xcprivacy
+
+# Android
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/captures/
+frontend/android/gradle/wrapper/gradle-wrapper.jar
+*.jks
+*.keystore
+
+# Linux
+frontend/linux/flutter/ephemeral/
+frontend/linux/.cmake/
+frontend/linux/build/
+
+# Windows
+frontend/windows/flutter/
+frontend/windows/runner/Build/
+frontend/windows/runner/ResourceHub/
+
+# -----------------------------------------------------------------------------
+# DOCKER
+# -----------------------------------------------------------------------------
+
+# Docker volumes (NEVER commit data)
+postgres_data/
+*. volume/
+
+# Docker compose override (may contain secrets)
+docker-compose.override.yml
+
+# -----------------------------------------------------------------------------
+# IDE / EDITORS
+# -----------------------------------------------------------------------------
+
+# VSCode
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ / WebStorm / PyCharm
 .idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-*
+
+# Atom
+.atom/
+atom-*
+
+# Eclipse
+.eclipse/
+.settings/
+
+# NetBeans
+nbproject/
+build/
+nbbuild/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Vim
 *.swp
 *.swo
+*.swn
+Session.vim
+.netrwhist
 
-# OS
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# -----------------------------------------------------------------------------
+# SECRETS / SECURITY
+# -----------------------------------------------------------------------------
+
+# Environment files (keep examples)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+!.env.example
+!.env.example.local
+
+# Credentials / Keys
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+credentials.json
+secrets.json
+service-account.json
+
+# SSH
+.ssh/
+
+# -----------------------------------------------------------------------------
+# OS / SYSTEM
+# -----------------------------------------------------------------------------
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
 
-# Logs
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# -----------------------------------------------------------------------------
+# DOCUMENTATION / ASSETS
+# -----------------------------------------------------------------------------
+
+docs/
+.github/
+
+# -----------------------------------------------------------------------------
+# KILO / AGENT TOOLS
+# -----------------------------------------------------------------------------
+
+.kilo/
+.kilocode/
+.claude/
+
+# -----------------------------------------------------------------------------
+# TEMPORARY / DEBUG
+# -----------------------------------------------------------------------------
+
+*.tmp
+*.temp
+*.bak
+*.swp
+*.orig
 *.log
-logs/
-
-# Poetry
-poetry.lock
-
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Alembic
-# (mantener migrations/ en git, solo ignorar cache)
+*.cache
+debug/
+tmp/
+temp/

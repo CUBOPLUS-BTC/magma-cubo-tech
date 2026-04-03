@@ -1,50 +1,60 @@
-# CUBO+ Hackathon Project
+# SatsScore — Bitcoin Financial Intelligence
 
-> Evaluation: Camino a la Fase Tech — "Don't trust, verify"
+> CUBO+ Hackathon 2026 | "Don't trust, verify"
 
 ## Team
-<!-- Completar con los miembros del equipo -->
-| Nombre | Rol | GitHub |
-|--------|-----|--------|
+
+| Name | Role | GitHub |
+|------|------|--------|
 | | Tech Lead | @wkatir |
 | | Tech | |
 | | Non-Tech Lead | |
 | | Non-Tech | |
 
-## Project Idea
-<!-- Describir brevemente el proyecto elegido -->
-
 ## Tech Stack
-- **Backend**: FastAPI (Python 3.11+)
-- **Database**: SQLite (desarrollo) / PostgreSQL (producción)
-- **ORM**: SQLAlchemy
+
+- **Backend**: FastAPI (Python 3.11+) — Dockerized
+- **Database**: PostgreSQL 16 — Dockerized
+- **Frontend**: Flutter Web — Deployed on Cloudflare Pages
+- **ORM**: SQLAlchemy + Alembic (migrations)
 - **Validation**: Pydantic
 
 ## Repository Structure
+
 ```
-/src        → Python code (led by Tech profile)
-/strategy   → Business model & documentation (led by Non-Tech profile)
+/src         → Backend Python (FastAPI) + Dockerfile
+/frontend    → Flutter app (Cloudflare Pages)
+/strategy    → Business model & documentation (Non-Tech)
 ```
 
 ## Quick Start
+
+### Backend + Database (Docker)
+
 ```bash
-# 1. Crear entorno virtual
-python -m venv .venv
-source .venv/bin/activate   # Linux/Mac
-.venv\Scripts\activate      # Windows
-
-# 2. Instalar dependencias
-pip install -r src/requirements.txt
-
-# 3. Copiar variables de entorno
 cp .env.example .env
+docker compose up --build
+```
 
-# 4. Ejecutar servidor
-uvicorn src.main:app --reload
+- API: http://localhost:8000
+- Swagger Docs: http://localhost:8000/docs
 
-# 5. Ver documentación API
-# http://localhost:8000/docs
+### Frontend (Flutter)
+
+```bash
+cd frontend
+flutter pub get
+flutter run -d chrome --dart-define=API_URL=http://localhost:8000
+```
+
+### Deploy Frontend to Cloudflare Pages
+
+```bash
+cd frontend
+flutter build web --release --dart-define=API_URL=https://your-api-domain.com
+# Output: frontend/build/web/ → deploy this folder
 ```
 
 ## Submission
+
 **Deadline**: April 21, 2026
