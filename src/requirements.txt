@@ -4,6 +4,7 @@ sqlmodel==0.0.37
 alembic==1.18.4
 pydantic-settings==2.13.1
 psycopg2-binary==2.9.11
+asyncpg==0.30.0
 python-dotenv==1.2.2
 httpx==0.28.1
 aiosqlite==0.22.1
