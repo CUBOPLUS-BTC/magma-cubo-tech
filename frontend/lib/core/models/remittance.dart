@@ -23,7 +23,8 @@ abstract class SendTimeRecommendation with _$SendTimeRecommendation {
   const factory SendTimeRecommendation({
     @JsonKey(name: 'best_time') required String bestTime,
     @JsonKey(name: 'current_fee_sat_vb') required int currentFeeSatVb,
-    @JsonKey(name: 'estimated_low_fee_sat_vb') required int estimatedLowFeeSatVb,
+    @JsonKey(name: 'estimated_low_fee_sat_vb')
+    required int estimatedLowFeeSatVb,
     @JsonKey(name: 'savings_percent') required double savingsPercent,
   }) = _SendTimeRecommendation;
 
