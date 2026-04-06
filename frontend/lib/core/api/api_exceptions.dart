@@ -17,5 +17,6 @@ class NetworkException extends ApiException {
 }
 
 class ServerException extends ApiException {
-  const ServerException([super.message = 'Server error']) : super(statusCode: 500);
+  const ServerException([super.message = 'Server error'])
+    : super(statusCode: 500);
 }

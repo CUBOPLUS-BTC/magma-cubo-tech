@@ -1,5 +1,8 @@
 class ApiConstants {
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
   static const String authChallenge = '$baseUrl/auth/challenge';
   static const String authVerify = '$baseUrl/auth/verify';
   static const String authMe = '$baseUrl/auth/me';
