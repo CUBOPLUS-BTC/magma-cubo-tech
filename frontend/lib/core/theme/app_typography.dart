@@ -3,33 +3,33 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 abstract class AppTypography {
-  static final displayLarge = GoogleFonts.outfit(
+  static final displayLarge = GoogleFonts.dmSans(
     fontSize: 48,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.02,
     color: AppColors.textPrimary,
   );
 
-  static final displayMedium = GoogleFonts.outfit(
+  static final displayMedium = GoogleFonts.dmSans(
     fontSize: 36,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.01,
     color: AppColors.textPrimary,
   );
 
-  static final titleLarge = GoogleFonts.outfit(
+  static final titleLarge = GoogleFonts.dmSans(
     fontSize: 22,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
-  static final titleMedium = GoogleFonts.outfit(
+  static final titleMedium = GoogleFonts.dmSans(
     fontSize: 16,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimary,
   );
 
-  static final titleSmall = GoogleFonts.outfit(
+  static final titleSmall = GoogleFonts.dmSans(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimary,
@@ -52,7 +52,7 @@ abstract class AppTypography {
   static final bodySmall = GoogleFonts.dmSans(
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.textTertiary,
+    color: AppColors.textSecondary,
   );
 
   static final labelLarge = GoogleFonts.dmSans(
@@ -66,14 +66,14 @@ abstract class AppTypography {
     fontSize: 11,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.03,
-    color: AppColors.textTertiary,
+    color: AppColors.textSecondary,
   );
 
   static final labelSmall = GoogleFonts.dmSans(
     fontSize: 10,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.04,
-    color: AppColors.textTertiary,
+    color: AppColors.textSecondary,
   );
 
   static final mono = GoogleFonts.jetBrainsMono(
