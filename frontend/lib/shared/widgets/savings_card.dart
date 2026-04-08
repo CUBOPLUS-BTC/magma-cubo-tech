@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -22,7 +21,7 @@ class SavingsCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         border: const Border(
           left: BorderSide(color: AppColors.accent, width: 3),
           top: BorderSide(color: AppColors.borderSubtle),
@@ -35,15 +34,12 @@ class SavingsCard extends StatelessWidget {
         children: [
           Text(
             'ANNUAL SAVINGS',
-            style: AppTypography.labelMedium.copyWith(
-              color: AppColors.accent,
-            ),
+            style: AppTypography.labelMedium.copyWith(color: AppColors.accent),
           ),
           const SizedBox(height: 8),
           Text(
             Formatters.formatUSD(annualSavings),
-            style: GoogleFonts.outfit(
-              fontSize: 28,
+            style: AppTypography.titleLarge.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.success,
             ),

@@ -16,10 +16,7 @@ class RiskChart extends StatelessWidget {
 
     return Column(
       children: [
-        SizedBox(
-          height: 220,
-          child: LineChart(_buildChart()),
-        ),
+        SizedBox(height: 220, child: LineChart(_buildChart())),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -42,10 +39,7 @@ class RiskChart extends StatelessWidget {
         Container(
           width: 6,
           height: 6,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(label, style: AppTypography.labelMedium),
@@ -70,8 +64,9 @@ class RiskChart extends StatelessWidget {
       borderData: FlBorderData(show: false),
       titlesData: FlTitlesData(
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        rightTitles:
-            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
@@ -110,7 +105,7 @@ class RiskChart extends StatelessWidget {
         touchTooltipData: LineTouchTooltipData(
           getTooltipColor: (_) => AppColors.surface,
           tooltipBorder: const BorderSide(color: AppColors.borderSubtle),
-          tooltipRoundedRadius: 4,
+          tooltipRoundedRadius: 12,
           getTooltipItems: (spots) {
             return spots.map((spot) {
               final Color color;
@@ -131,10 +126,7 @@ class RiskChart extends StatelessWidget {
               }
               return LineTooltipItem(
                 '$prefix: ${spot.y.toStringAsFixed(2)}%',
-                GoogleFonts.jetBrainsMono(
-                  fontSize: 11,
-                  color: color,
-                ),
+                GoogleFonts.jetBrainsMono(fontSize: 11, color: color),
               );
             }).toList();
           },

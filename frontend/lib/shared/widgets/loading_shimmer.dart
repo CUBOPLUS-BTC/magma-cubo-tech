@@ -5,11 +5,7 @@ class LoadingShimmer extends StatefulWidget {
   final double width;
   final double height;
 
-  const LoadingShimmer({
-    super.key,
-    required this.width,
-    required this.height,
-  });
+  const LoadingShimmer({super.key, required this.width, required this.height});
 
   factory LoadingShimmer.card({Key? key, double height = 120}) =>
       LoadingShimmer(key: key, width: double.infinity, height: height);
@@ -74,7 +70,7 @@ class _LoadingShimmerState extends State<LoadingShimmer>
         height: widget.height,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
     );

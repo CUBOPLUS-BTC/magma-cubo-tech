@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -55,17 +54,13 @@ class ScoreGauge extends StatelessWidget {
                   children: [
                     Text(
                       '$currentScore',
-                      style: GoogleFonts.outfit(
+                      style: AppTypography.displayLarge.copyWith(
                         fontSize: size * 0.2,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _rank(currentScore),
-                      style: AppTypography.bodyMedium,
-                    ),
+                    const SizedBox(height: 4),
+                    Text(_rank(currentScore), style: AppTypography.bodyMedium),
                   ],
                 ),
               ),

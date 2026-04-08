@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 
 class BreakdownBar extends StatelessWidget {
   final String label;
@@ -35,21 +35,17 @@ class BreakdownBar extends StatelessWidget {
           children: [
             Text(
               label,
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
+              style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             Text(
               '$score/$maxScore',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 13,
-                color: AppColors.textPrimary,
-              ),
+              style: AppTypography.mono.copyWith(color: AppColors.textPrimary),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         SizedBox(
           height: 4,
           child: TweenAnimationBuilder<double>(
@@ -81,20 +77,14 @@ class _BarPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, size.width, size.height),
       const Radius.circular(2),
     );
-    canvas.drawRRect(
-      trackRRect,
-      Paint()..color = AppColors.borderSubtle,
-    );
+    canvas.drawRRect(trackRRect, Paint()..color = AppColors.borderSubtle);
 
     if (progress > 0) {
       final fillRRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, size.width * progress, size.height),
         const Radius.circular(2),
       );
-      canvas.drawRRect(
-        fillRRect,
-        Paint()..color = color,
-      );
+      canvas.drawRRect(fillRRect, Paint()..color = color);
     }
   }
 

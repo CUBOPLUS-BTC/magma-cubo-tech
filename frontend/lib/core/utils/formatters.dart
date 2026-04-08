@@ -1,19 +1,24 @@
 import 'package:intl/intl.dart';
 
 abstract class Formatters {
-  static final _usdFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+  static final _usdFormat = NumberFormat.currency(
+    symbol: '\$',
+    decimalDigits: 2,
+  );
   static final _btcFormat = NumberFormat('0.00000000');
   static final _percentFormat = NumberFormat('+0.0;-0.0');
 
   static String formatBTC(double amount) => '${_btcFormat.format(amount)} BTC';
 
-  static String formatSats(int sats) => '${NumberFormat('#,###').format(sats)} sats';
+  static String formatSats(int sats) =>
+      '${NumberFormat('#,###').format(sats)} sats';
 
   static String formatUSD(double amount) => _usdFormat.format(amount);
 
   static String formatScore(int score) => score.toString();
 
-  static String formatPercentage(double pct) => '${_percentFormat.format(pct)}%';
+  static String formatPercentage(double pct) =>
+      '${_percentFormat.format(pct)}%';
 
   static String formatSatVb(int sats) => '$sats sat/vB';
 

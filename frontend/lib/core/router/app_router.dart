@@ -8,16 +8,22 @@ import '../../features/simulator/presentation/simulator_screen.dart';
 import '../../features/remittance/presentation/remittance_screen.dart';
 import '../services/nostr_auth_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import '../utils/breakpoints.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 const _navItems = [
-  ('/home', Icons.home_outlined, Icons.home, 'Home'),
-  ('/score', Icons.speed_outlined, Icons.speed, 'Score'),
-  ('/simulator', Icons.show_chart_outlined, Icons.show_chart, 'Simulate'),
-  ('/remittance', Icons.send_outlined, Icons.send, 'Remittances'),
+  ('/home', Icons.grid_view_rounded, Icons.grid_view_rounded, 'Home'),
+  ('/score', Icons.analytics_outlined, Icons.analytics_rounded, 'Score'),
+  (
+    '/simulator',
+    Icons.candlestick_chart_outlined,
+    Icons.candlestick_chart_rounded,
+    'Simulate',
+  ),
+  ('/remittance', Icons.route_outlined, Icons.route_rounded, 'Remit'),
 ];
 
 final appRouter = GoRouter(
@@ -53,7 +59,6 @@ final appRouter = GoRouter(
     ),
   ],
 );
-
 
 class ShellScaffold extends StatelessWidget {
   final Widget child;
@@ -112,57 +117,84 @@ class _MobileShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: const Text(
-          'SatsScore',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout_outlined, size: 20, color: AppColors.textSecondary),
-            onPressed: () => _handleLogout(context),
-          ),
-        ],
-      ),
-      body: child,
+      body: SafeArea(child: child),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
           border: Border(
             top: BorderSide(color: AppColors.borderSubtle, width: 1),
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (i) => context.go(_navItems[i].$1),
-          backgroundColor: AppColors.surface,
-          selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.textTertiary,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          selectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.3,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(_navItems.length, (i) {
+                final isSelected = i == currentIndex;
+                final item = _navItems[i];
+                return _BottomNavItem(
+                  icon: isSelected ? item.$3 : item.$2,
+                  label: item.$4,
+                  isSelected: isSelected,
+                  onTap: () => context.go(item.$1),
+                );
+              }),
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-          items: _navItems
-              .map(
-                (t) => BottomNavigationBarItem(
-                  icon: Icon(t.$2, size: 22),
-                  activeIcon: Icon(t.$3, size: 22),
-                  label: t.$4,
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accentMuted : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? AppColors.accent : AppColors.textTertiary,
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
-              )
-              .toList(),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -173,26 +205,26 @@ Future<void> _handleLogout(BuildContext context) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: AppColors.surface,
-      title: const Text(
+      backgroundColor: AppColors.surfaceElevated,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
         'Logout',
-        style: TextStyle(color: AppColors.textPrimary),
+        style: AppTypography.titleLarge.copyWith(fontSize: 18),
       ),
-      content: const Text(
+      content: Text(
         'Are you sure you want to logout?',
-        style: TextStyle(color: AppColors.textSecondary),
+        style: AppTypography.bodyMedium,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            foregroundColor: Colors.black,
-          ),
           child: const Text('Logout'),
         ),
       ],
@@ -255,21 +287,23 @@ class _SidebarHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: AppColors.accent,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.bolt, size: 18, color: Colors.black),
+            child: const Icon(
+              Icons.bolt_rounded,
+              size: 20,
+              color: Colors.black,
+            ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'SatsScore',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -314,26 +348,14 @@ class _SidebarItemState extends State<_SidebarItem> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: widget.isSelected
-                  ? AppColors.accent.withValues(alpha: 0.1)
+                  ? AppColors.accentMuted
                   : _isHovered
                   ? AppColors.surfaceElevated
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
-                if (widget.isSelected)
-                  Container(
-                    width: 3,
-                    height: 16,
-                    margin: const EdgeInsets.only(right: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      borderRadius: BorderRadius.circular(1),
-                    ),
-                  )
-                else
-                  const SizedBox(width: 13),
                 Icon(
                   widget.isSelected ? widget.activeIcon : widget.icon,
                   size: 18,

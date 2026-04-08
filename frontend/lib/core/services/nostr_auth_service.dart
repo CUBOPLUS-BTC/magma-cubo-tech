@@ -64,7 +64,9 @@ class NostrAuthService {
     String method,
   ) async {
     try {
-      final keyPair = _keys.generateKeyPairFromExistingPrivateKey(privateKeyHex);
+      final keyPair = _keys.generateKeyPairFromExistingPrivateKey(
+        privateKeyHex,
+      );
       final challenge = await getChallenge(keyPair.public);
 
       final event = NostrEvent.fromPartialData(
@@ -79,10 +81,7 @@ class NostrAuthService {
 
       final response = await _dio.post(
         ApiConstants.authVerify,
-        data: {
-          'signed_event': event.toMap(),
-          'challenge': challenge,
-        },
+        data: {'signed_event': event.toMap(), 'challenge': challenge},
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
       return response.data['success'] == true;

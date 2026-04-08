@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -13,10 +12,10 @@ class ChannelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: channel.isRecommended
               ? AppColors.accent
@@ -31,10 +30,8 @@ class ChannelCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   channel.name,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
+                  style: AppTypography.titleSmall.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -50,17 +47,14 @@ class ChannelCard extends StatelessWidget {
                   ),
                   child: Text(
                     'RECOMMENDED',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.04,
+                    style: AppTypography.labelSmall.copyWith(
                       color: AppColors.accent,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -76,10 +70,7 @@ class ChannelCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            channel.estimatedTime,
-            style: AppTypography.bodySmall,
-          ),
+          Text(channel.estimatedTime, style: AppTypography.bodySmall),
         ],
       ),
     );

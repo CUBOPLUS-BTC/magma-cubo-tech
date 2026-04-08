@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/utils/validators.dart';
 
 class BTCAddressInput extends StatefulWidget {
@@ -47,23 +47,17 @@ class _BTCAddressInputState extends State<BTCAddressInput> {
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: _error != null
-                  ? AppColors.danger
-                  : AppColors.borderSubtle,
+              color: _error != null ? AppColors.danger : AppColors.borderSubtle,
             ),
           ),
           child: TextField(
             controller: _controller,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 13,
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.mono,
             decoration: InputDecoration(
               hintText: 'bc1q...',
-              hintStyle: GoogleFonts.jetBrainsMono(
-                fontSize: 13,
+              hintStyle: AppTypography.mono.copyWith(
                 color: AppColors.textTertiary,
               ),
               prefixIcon: const Icon(
@@ -93,8 +87,7 @@ class _BTCAddressInputState extends State<BTCAddressInput> {
                         )
                       : Text(
                           'Verify',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 13,
+                          style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -113,10 +106,7 @@ class _BTCAddressInputState extends State<BTCAddressInput> {
           const SizedBox(height: 4),
           Text(
             _error!,
-            style: GoogleFonts.dmSans(
-              fontSize: 12,
-              color: AppColors.danger,
-            ),
+            style: AppTypography.bodySmall.copyWith(color: AppColors.danger),
           ),
         ],
       ],
