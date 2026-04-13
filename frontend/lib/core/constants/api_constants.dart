@@ -1,7 +1,7 @@
 class ApiConstants {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8000',
+    defaultValue: 'https://api.eclalune.com',
   );
   static const String authChallenge = '$baseUrl/auth/challenge';
   static const String authVerify = '$baseUrl/auth/verify';

@@ -111,138 +111,235 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.borderStrong),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.bolt_outlined,
-                    size: 22,
-                    color: AppColors.textPrimary,
-                  ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 900),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.borderSubtle),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'SatsScore',
-                  style: AppTypography.displayMedium.copyWith(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Bitcoin Financial Intelligence',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                TextField(
-                  controller: _keyController,
-                  style: AppTypography.mono.copyWith(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'nsec1...',
-                    hintStyle: TextStyle(color: AppColors.textTertiary),
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(left: 12, right: 8),
-                      child: Icon(
-                        Icons.key_outlined,
-                        size: 16,
-                        color: AppColors.textTertiary,
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      padding: const EdgeInsets.all(40),
+                      color: AppColors.surface,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/salvium.png',
+                            height: 140,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Bitcoin Financial\nIntelligence',
+                            style: AppTypography.displayMedium.copyWith(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                              height: 1.3,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Take control of your financial future with intelligent Bitcoin analytics',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.borderStrong),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.borderStrong),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.textSecondary),
-                    ),
                   ),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _error!,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome Back',
+                            style: AppTypography.titleLarge.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Connect with your Nostr identity',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Private Key',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _keyController,
+                            style: AppTypography.mono.copyWith(
+                              fontSize: 13,
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'nsec1...',
+                              hintStyle: TextStyle(color: AppColors.textTertiary),
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.only(left: 12, right: 8),
+                                child: Icon(
+                                  Icons.key_outlined,
+                                  size: 16,
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                              prefixIconConstraints: const BoxConstraints(minWidth: 0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 14,
+                              ),
+                              filled: true,
+                              fillColor: AppColors.surfaceElevated,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: AppColors.primary, width: 1),
+                              ),
+                            ),
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline, size: 16, color: AppColors.danger),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _error!,
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.danger,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleConnect,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Connect',
+                                      style: AppTypography.titleSmall.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: AppColors.borderSubtle)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  'or',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: AppColors.borderSubtle)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _handleGenerateKeys,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.textPrimary,
+                                side: BorderSide(color: AppColors.borderStrong),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: const Icon(Icons.add_rounded, size: 18),
+                              label: Text(
+                                'Generate New Keys',
+                                style: AppTypography.titleSmall.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Your keys never leave your device',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 40,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleConnect,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
-                      foregroundColor: AppColors.background,
-                      disabledBackgroundColor: AppColors.textSecondary
-                          .withValues(alpha: 0.3),
-                      disabledForegroundColor: AppColors.textTertiary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.75,
-                              color: AppColors.background,
-                            ),
-                          )
-                        : const Text('Connect'),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 40,
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : _handleGenerateKeys,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                      side: BorderSide(color: AppColors.borderStrong),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Generate new keys'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -269,11 +366,11 @@ class _KeyGeneratedDialogState extends State<_KeyGeneratedDialog> {
     return Dialog(
       backgroundColor: AppColors.surfaceElevated,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: AppColors.borderStrong),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: 480),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -282,58 +379,88 @@ class _KeyGeneratedDialogState extends State<_KeyGeneratedDialog> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: AppColors.textSecondary,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.key_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 12),
                   Text(
                     'Save Your Keys',
                     style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Public key (shareable)',
-                style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.textTertiary,
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_rounded, size: 18, color: AppColors.warning),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Never share your private key. We cannot recover it if lost.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              _KeyBox(keyValue: widget.npub, isPrivate: false),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
-                'Private key (never share)',
+                'Public Key (shareable)',
                 style: AppTypography.labelLarge.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
-              _KeyBox(keyValue: widget.nsec, isPrivate: true),
+              _KeyBox(keyValue: widget.npub, isPrivate: false),
               const SizedBox(height: 16),
+              Text(
+                'Private Key (never share)',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.danger,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _KeyBox(keyValue: widget.nsec, isPrivate: true),
+              const SizedBox(height: 20),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     child: Checkbox(
                       value: _accepted,
                       onChanged: (v) => setState(() => _accepted = v ?? false),
-                      activeColor: AppColors.textPrimary,
+                      activeColor: AppColors.primary,
                       side: BorderSide(color: AppColors.borderStrong),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: GestureDetector(
                       onTap: () => setState(() => _accepted = !_accepted),
@@ -347,7 +474,7 @@ class _KeyGeneratedDialogState extends State<_KeyGeneratedDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -358,20 +485,16 @@ class _KeyGeneratedDialogState extends State<_KeyGeneratedDialog> {
                     ),
                     child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _accepted
-                        ? () => Navigator.of(context).pop(true)
-                        : null,
+                    onPressed: _accepted ? () => Navigator.of(context).pop(true) : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
-                      foregroundColor: AppColors.background,
-                      disabledBackgroundColor: AppColors.textSecondary
-                          .withValues(alpha: 0.2),
-                      disabledForegroundColor: AppColors.textTertiary,
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: const Text('Continue'),
@@ -395,11 +518,13 @@ class _KeyBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.borderStrong),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isPrivate ? AppColors.danger.withValues(alpha: 0.3) : AppColors.borderStrong,
+        ),
       ),
       child: Row(
         children: [
@@ -429,28 +554,30 @@ class _CopyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(6),
       onTap: () {
         Clipboard.setData(ClipboardData(text: text));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isPrivate
-                  ? 'Private key copied - store it securely'
-                  : 'Public key copied',
+              isPrivate ? 'Private key copied - store it securely' : 'Public key copied',
               style: TextStyle(color: AppColors.textPrimary),
             ),
             duration: const Duration(seconds: 2),
-            backgroundColor: AppColors.surfaceHighlight,
+            backgroundColor: AppColors.surface,
           ),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.all(4),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(6),
+        ),
         child: Icon(
           Icons.copy_outlined,
           size: 14,
-          color: AppColors.textTertiary,
+          color: AppColors.textSecondary,
         ),
       ),
     );

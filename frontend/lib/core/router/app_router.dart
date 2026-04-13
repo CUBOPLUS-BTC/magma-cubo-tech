@@ -264,6 +264,14 @@ class _Sidebar extends ConsumerWidget {
             );
           }),
           const Spacer(),
+          _SidebarItem(
+            icon: Icons.help_outline_rounded,
+            activeIcon: Icons.help_rounded,
+            label: 'About',
+            isSelected: false,
+            onTap: () => _showAboutDialog(context),
+          ),
+          const SizedBox(height: 4),
           const Divider(color: AppColors.borderSubtle),
           _SidebarItem(
             icon: Icons.logout_outlined,
@@ -283,30 +291,11 @@ class _SidebarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              size: 20,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'SatsScore',
-            style: AppTypography.titleMedium.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      child: Image.asset(
+        'assets/images/salvium.png',
+        height: 80,
+        fit: BoxFit.contain,
       ),
     );
   }
@@ -380,6 +369,217 @@ class _SidebarItemState extends State<_SidebarItem> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+Future<void> _showAboutDialog(BuildContext context) async {
+  await showDialog(
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 600),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Image.asset('assets/images/salvium.png', height: 40),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'About Salvium',
+                          style: AppTypography.titleLarge.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          'BITCOIN FINANCIAL INTELLIGENCE · EL SALVADOR',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.primary,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'The financial intelligence layer that Bitcoin needed in El Salvador. Convert your on-chain activity into concrete and verifiable financial decisions.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Modules', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              _AboutModule(
+                icon: Icons.analytics_outlined,
+                title: 'Bitcoin Score',
+                description: 'Your credit history built transaction by transaction. No bank.',
+                badge: '0 – 850',
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: 12),
+              _AboutModule(
+                icon: Icons.candlestick_chart_outlined,
+                title: 'Simulator',
+                description: 'Analyze the best time to convert BTC with real historical data.',
+                badge: 'CoinGecko · Kraken',
+                color: AppColors.info,
+              ),
+              const SizedBox(height: 12),
+              _AboutModule(
+                icon: Icons.route_outlined,
+                title: 'Remittances',
+                description: 'Compare Lightning vs Western Union vs MoneyGram in real time.',
+                badge: '\$185 saved/year',
+                color: AppColors.success,
+              ),
+              const SizedBox(height: 12),
+              _AboutModule(
+                icon: Icons.account_balance_outlined,
+                title: 'Pension',
+                description: 'Detect on-chain savings patterns and project your retirement at 20 years.',
+                badge: 'IPR 0 – 100',
+                color: AppColors.warning,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.verified_user_outlined, size: 16, color: AppColors.success),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Don't trust, verify.",
+                          style: AppTypography.titleSmall.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Every data verifiable directly on the blockchain',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '"The nature of Bitcoin is such that once the version 0.1 was released, the core design was set in stone for all time."',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '— Satoshi Nakamoto',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _AboutModule extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final String badge;
+  final Color color;
+
+  const _AboutModule({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.badge,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              badge,
+              style: AppTypography.monoSmall.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
