@@ -1,4 +1,6 @@
 import json
+from typing import Any
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,10 +17,12 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if isinstance(self.CORS_ORIGINS, str):
-            self.CORS_ORIGINS = json.loads(self.CORS_ORIGINS)
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
 
 
 settings = Settings()
