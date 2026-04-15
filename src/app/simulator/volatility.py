@@ -1,5 +1,5 @@
-import asyncio
 import statistics
+from concurrent.futures import ThreadPoolExecutor
 from ..services.coingecko_client import CoinGeckoClient
 from .schemas import DayAnalysis, SimulationResponse
 
@@ -8,15 +8,19 @@ class VolatilitySimulator:
     def __init__(self):
         self.coingecko = CoinGeckoClient()
 
-    async def simulate(self, amount_usd: float, days_history: int = 90) -> SimulationResponse:
-        prices_data, btc_price = await asyncio.gather(
-            self.coingecko.get_historical_prices(days=days_history),
-            self.coingecko.get_price(),
-            return_exceptions=True,
-        )
+    def simulate(self, amount_usd: float, days_history: int = 90) -> SimulationResponse:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            f_hist = executor.submit(self.coingecko.get_historical_prices, days_history)
+            f_price = executor.submit(self.coingecko.get_price)
 
-        prices_data = prices_data if not isinstance(prices_data, Exception) else []
-        btc_price = btc_price if not isinstance(btc_price, Exception) else 0.0
+            try:
+                prices_data = f_hist.result()
+            except Exception:
+                prices_data = []
+            try:
+                btc_price = f_price.result()
+            except Exception:
+                btc_price = 0.0
 
         prices = [entry[1] for entry in prices_data] if prices_data else []
 
@@ -88,7 +92,8 @@ class VolatilitySimulator:
             )
         else:
             recommendation = (
-                "Convert immediately — no waiting period shows a positive risk-adjusted return"
+                "Convert immediately — no waiting period shows a positive "
+                "risk-adjusted return"
             )
 
         return SimulationResponse(

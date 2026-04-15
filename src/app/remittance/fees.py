@@ -6,11 +6,11 @@ class FeeTracker:
     def __init__(self):
         self.mempool = MempoolClient()
 
-    async def get_current_fees(self) -> dict:
-        return await self.mempool.get_recommended_fees()
+    def get_current_fees(self) -> dict:
+        return self.mempool.get_recommended_fees()
 
-    async def get_best_send_time(self) -> dict:
-        fees = await self.mempool.get_recommended_fees()
+    def get_best_send_time(self) -> dict:
+        fees = self.mempool.get_recommended_fees()
 
         current_fee = fees.get("halfHourFee", 10) if isinstance(fees, dict) else 10
         economy_fee = fees.get("economyFee", 5) if isinstance(fees, dict) else 5
@@ -23,7 +23,9 @@ class FeeTracker:
         is_low_hour = 2 <= now.hour <= 6
 
         if is_weekend and is_low_hour:
-            best_time = "Now — current time is in the optimal window (weekend 2-6 AM UTC)"
+            best_time = (
+                "Now — current time is in the optimal window (weekend 2-6 AM UTC)"
+            )
         elif is_weekend:
             best_time = "Today between 2-6 AM UTC (weekend low-fee window)"
         else:

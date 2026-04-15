@@ -1,13 +1,15 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 from typing import Optional
 
 
-class RemittanceRequest(BaseModel):
+@dataclass
+class RemittanceRequest:
     amount_usd: float
     frequency: str = "monthly"
 
 
-class ChannelComparison(BaseModel):
+@dataclass
+class ChannelComparison:
     name: str
     fee_percent: float
     fee_usd: float
@@ -15,16 +17,50 @@ class ChannelComparison(BaseModel):
     estimated_time: str
     is_recommended: bool
 
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "fee_percent": self.fee_percent,
+            "fee_usd": self.fee_usd,
+            "amount_received": self.amount_received,
+            "estimated_time": self.estimated_time,
+            "is_recommended": self.is_recommended,
+        }
 
-class SendTimeRecommendation(BaseModel):
+
+@dataclass
+class SendTimeRecommendation:
     best_time: str
     current_fee_sat_vb: int
     estimated_low_fee_sat_vb: int
     savings_percent: float
 
+    def to_dict(self) -> dict:
+        return {
+            "best_time": self.best_time,
+            "current_fee_sat_vb": self.current_fee_sat_vb,
+            "estimated_low_fee_sat_vb": self.estimated_low_fee_sat_vb,
+            "savings_percent": self.savings_percent,
+        }
 
-class RemittanceResponse(BaseModel):
-    channels: list[ChannelComparison]
+
+@dataclass
+class RemittanceResponse:
+    channels: list
     annual_savings: float
     best_channel: str
     best_time: Optional[SendTimeRecommendation] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "channels": [
+                c.to_dict() if hasattr(c, "to_dict") else c for c in self.channels
+            ],
+            "annual_savings": self.annual_savings,
+            "best_channel": self.best_channel,
+            "best_time": (
+                self.best_time.to_dict()
+                if self.best_time and hasattr(self.best_time, "to_dict")
+                else None
+            ),
+        }

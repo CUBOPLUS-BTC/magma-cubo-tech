@@ -1,5 +1,5 @@
-import asyncio
 import statistics
+from concurrent.futures import ThreadPoolExecutor
 from ..services.coingecko_client import CoinGeckoClient
 
 
@@ -7,15 +7,19 @@ class ConversionStrategy:
     def __init__(self):
         self.coingecko = CoinGeckoClient()
 
-    async def recommend(self, amount_usd: float, days_history: int = 90) -> dict:
-        prices_data, btc_price = await asyncio.gather(
-            self.coingecko.get_historical_prices(days=days_history),
-            self.coingecko.get_price(),
-            return_exceptions=True,
-        )
+    def recommend(self, amount_usd: float, days_history: int = 90) -> dict:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            f_hist = executor.submit(self.coingecko.get_historical_prices, days_history)
+            f_price = executor.submit(self.coingecko.get_price)
 
-        prices_data = prices_data if not isinstance(prices_data, Exception) else []
-        btc_price = btc_price if not isinstance(btc_price, Exception) else 0.0
+            try:
+                prices_data = f_hist.result()
+            except Exception:
+                prices_data = []
+            try:
+                btc_price = f_price.result()
+            except Exception:
+                btc_price = 0.0
 
         prices = [entry[1] for entry in prices_data] if prices_data else []
 
@@ -46,9 +50,13 @@ class ConversionStrategy:
         ]
         volatility = statistics.stdev(daily_returns) if len(daily_returns) > 1 else 0.0
 
-        lump_sharpe = (lump_sum_btc / (amount_usd / btc_price) - 1) / max(volatility, 0.01)
-        dca_volatility = volatility / (dca_intervals ** 0.5)
-        dca_sharpe = (dca_btc / (amount_usd / btc_price) - 1) / max(dca_volatility, 0.01)
+        lump_sharpe = (lump_sum_btc / (amount_usd / btc_price) - 1) / max(
+            volatility, 0.01
+        )
+        dca_volatility = volatility / (dca_intervals**0.5)
+        dca_sharpe = (dca_btc / (amount_usd / btc_price) - 1) / max(
+            dca_volatility, 0.01
+        )
 
         if volatility < 2.0:
             lump_risk = "low"

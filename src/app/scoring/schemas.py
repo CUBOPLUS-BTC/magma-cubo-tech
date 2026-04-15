@@ -1,12 +1,13 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class ScoreResponse(BaseModel):
+@dataclass
+class ScoreResponse:
     total_score: int
     rank: str
     address: str
     breakdown: dict
-    recommendations: list[str]
+    recommendations: list
 
 
 def classify_rank(score: int) -> str:
@@ -22,7 +23,7 @@ def classify_rank(score: int) -> str:
         return "New"
 
 
-def generate_recommendations(breakdown: dict) -> list[str]:
+def generate_recommendations(breakdown: dict) -> list:
     recs = []
 
     if breakdown.get("consistency", 0) < 100:

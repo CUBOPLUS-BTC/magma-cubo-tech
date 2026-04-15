@@ -1,17 +1,38 @@
-from sqlmodel import SQLModel, create_engine, Session, MetaData
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-
+import sqlite3
+import threading
 from .config import settings
 
-engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
+_local = threading.local()
+
+_CREATE_USERS = """
+    CREATE TABLE IF NOT EXISTS users (
+        pubkey TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+    )
+"""
 
 
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+def _is_postgres() -> bool:
+    return settings.DATABASE_URL.startswith("postgresql://") or \
+           settings.DATABASE_URL.startswith("postgres://")
 
 
-async def get_session() -> AsyncSession:
-    async with AsyncSession(engine) as session:
-        yield session
+def get_conn():
+    if not hasattr(_local, "conn") or _local.conn is None:
+        if _is_postgres():
+            import psycopg2
+            import psycopg2.extras
+            _local.conn = psycopg2.connect(settings.DATABASE_URL)
+            _local.conn.autocommit = False
+        else:
+            url = settings.DATABASE_URL
+            path = url[len("sqlite:///"):] if url.startswith("sqlite:///") else "./satsscore.db"
+            _local.conn = sqlite3.connect(path, check_same_thread=False)
+            _local.conn.row_factory = sqlite3.Row
+    return _local.conn
+
+
+def init_db() -> None:
+    conn = get_conn()
+    conn.execute(_CREATE_USERS)
+    conn.commit()

@@ -1,8 +1,7 @@
 from .config import settings
-from .database import get_session, init_db
+from .database import init_db
 
 __all__ = [
     "settings",
-    "get_session",
     "init_db",
 ]

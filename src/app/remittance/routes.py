@@ -1,33 +1,26 @@
-from fastapi import APIRouter, HTTPException
-from .schemas import RemittanceRequest, RemittanceResponse
 from .optimizer import RemittanceOptimizer
 from .fees import FeeTracker
 
-router = APIRouter(prefix="/remittance", tags=["remittance"])
-
-optimizer = RemittanceOptimizer()
-fee_tracker = FeeTracker()
+_optimizer = RemittanceOptimizer()
+_fee_tracker = FeeTracker()
 
 
-@router.post("/compare", response_model=RemittanceResponse)
-async def compare_channels(req: RemittanceRequest):
+def handle_compare(body: dict) -> tuple[dict, int]:
+    """POST /remittance/compare"""
     try:
-        return await optimizer.compare(
-            amount_usd=req.amount_usd,
-            frequency=req.frequency,
-        )
+        amount_usd = float(body.get("amount_usd", 0))
+        frequency = body.get("frequency", "monthly")
+        result = _optimizer.compare(amount_usd=amount_usd, frequency=frequency)
+        return result.to_dict(), 200
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"detail": str(e)}, 500
 
 
-@router.get("/fees")
-async def get_fees():
+def handle_fees(body: dict) -> tuple[dict, int]:
+    """GET /remittance/fees"""
     try:
-        current_fees = await fee_tracker.get_current_fees()
-        best_time = await fee_tracker.get_best_send_time()
-        return {
-            "fees": current_fees,
-            "best_time": best_time,
-        }
+        current_fees = _fee_tracker.get_current_fees()
+        best_time = _fee_tracker.get_best_send_time()
+        return {"fees": current_fees, "best_time": best_time}, 200
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"detail": str(e)}, 500

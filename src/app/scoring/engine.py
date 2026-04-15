@@ -1,4 +1,4 @@
-import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from ..services.mempool_client import MempoolClient
 from ..services.coingecko_client import CoinGeckoClient
 from .onchain import (
@@ -16,21 +16,34 @@ class ScoringEngine:
         self.mempool = MempoolClient()
         self.coingecko = CoinGeckoClient()
 
-    async def calculate_score(self, address: str) -> ScoreResponse:
-        address_info, txs, utxos, ln_stats = await asyncio.gather(
-            self.mempool.get_address_info(address),
-            self.mempool.get_address_txs(address),
-            self.mempool.get_address_utxos(address),
-            self.mempool.get_lightning_stats(),
-            return_exceptions=True,
-        )
+    def calculate_score(self, address: str) -> ScoreResponse:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            f_info = executor.submit(self.mempool.get_address_info, address)
+            f_txs = executor.submit(self.mempool.get_address_txs, address)
+            f_utxos = executor.submit(self.mempool.get_address_utxos, address)
+            f_ln = executor.submit(self.mempool.get_lightning_stats)
 
-        btc_price = await self.coingecko.get_price()
+            try:
+                address_info = f_info.result()
+            except Exception:
+                address_info = {}
+            try:
+                txs = f_txs.result()
+            except Exception:
+                txs = []
+            try:
+                utxos = f_utxos.result()
+            except Exception:
+                utxos = []
+            try:
+                ln_stats = f_ln.result()
+            except Exception:
+                ln_stats = {}
 
-        address_info = address_info if not isinstance(address_info, Exception) else {}
-        txs = txs if not isinstance(txs, Exception) else []
-        utxos = utxos if not isinstance(utxos, Exception) else []
-        ln_stats = ln_stats if not isinstance(ln_stats, Exception) else {}
+        try:
+            btc_price = self.coingecko.get_price()
+        except Exception:
+            btc_price = 0.0
 
         breakdown = {
             "consistency": calculate_consistency(txs),
@@ -51,10 +64,22 @@ class ScoringEngine:
             address=address,
             breakdown={
                 "consistency": {"score": breakdown["consistency"], "max": 200},
-                "relative_volume": {"score": breakdown["relative_volume"], "max": 150},
-                "diversification": {"score": breakdown["diversification"], "max": 100},
-                "savings_pattern": {"score": breakdown["savings_pattern"], "max": 150},
-                "payment_history": {"score": breakdown["payment_history"], "max": 150},
+                "relative_volume": {
+                    "score": breakdown["relative_volume"],
+                    "max": 150,
+                },
+                "diversification": {
+                    "score": breakdown["diversification"],
+                    "max": 100,
+                },
+                "savings_pattern": {
+                    "score": breakdown["savings_pattern"],
+                    "max": 150,
+                },
+                "payment_history": {
+                    "score": breakdown["payment_history"],
+                    "max": 150,
+                },
                 "lightning_activity": {
                     "score": breakdown["lightning_activity"],
                     "max": 100,

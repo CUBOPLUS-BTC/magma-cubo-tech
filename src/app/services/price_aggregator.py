@@ -1,6 +1,4 @@
-import asyncio
-from typing import Optional
-from .mempool_client import MempoolClient
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .coingecko_client import CoinGeckoClient
 from .kraken_client import KrakenClient
 
@@ -11,25 +9,26 @@ class PriceUnavailableError(Exception):
 
 class PriceAggregator:
     def __init__(self, coingecko_key: str = ""):
-        self.mempool = MempoolClient()
         self.coingecko = CoinGeckoClient(coingecko_key)
         self.kraken = KrakenClient()
 
-    async def get_verified_price(self) -> dict:
-        results = await asyncio.gather(
-            self._get_mempool_price(),
-            self._get_coingecko_price(),
-            self._get_kraken_price(),
-            return_exceptions=True,
-        )
-
+    def get_verified_price(self) -> dict:
         prices = []
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                continue
-            prices.append(result)
 
-        if len(prices) == 0:
+        fetchers = [
+            self.coingecko.get_price,
+            self.kraken.get_price,
+        ]
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {executor.submit(fn): fn for fn in fetchers}
+            for future in as_completed(futures):
+                try:
+                    prices.append(future.result())
+                except Exception:
+                    pass
+
+        if not prices:
             raise PriceUnavailableError("No price sources available")
 
         median_price = sorted(prices)[len(prices) // 2]
@@ -45,13 +44,3 @@ class PriceAggregator:
             "deviation": deviation,
             "has_warning": len(prices) < 2,
         }
-
-    async def _get_mempool_price(self) -> float:
-        fees = await self.mempool.get_recommended_fees()
-        return float(fees.get("today", 0))
-
-    async def _get_coingecko_price(self) -> float:
-        return await self.coingecko.get_price()
-
-    async def _get_kraken_price(self) -> float:
-        return await self.kraken.get_price()

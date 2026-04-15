@@ -1,31 +1,27 @@
-from fastapi import APIRouter, HTTPException
-from .schemas import SimulationRequest, SimulationResponse
 from .volatility import VolatilitySimulator
 from .conversion import ConversionStrategy
 
-router = APIRouter(prefix="/simulate", tags=["simulator"])
-
-simulator = VolatilitySimulator()
-conversion = ConversionStrategy()
+_simulator = VolatilitySimulator()
+_conversion = ConversionStrategy()
 
 
-@router.post("/volatility", response_model=SimulationResponse)
-async def simulate_volatility(req: SimulationRequest):
+def handle_volatility(body: dict) -> tuple[dict, int]:
+    """POST /simulate/volatility"""
     try:
-        return await simulator.simulate(
-            amount_usd=req.amount_usd,
-            days_history=req.days_history,
-        )
+        amount_usd = float(body.get("amount_usd", 0))
+        days_history = int(body.get("days_history", 90))
+        result = _simulator.simulate(amount_usd=amount_usd, days_history=days_history)
+        return result.to_dict(), 200
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"detail": str(e)}, 500
 
 
-@router.post("/conversion")
-async def simulate_conversion(req: SimulationRequest):
+def handle_conversion(body: dict) -> tuple[dict, int]:
+    """POST /simulate/conversion"""
     try:
-        return await conversion.recommend(
-            amount_usd=req.amount_usd,
-            days_history=req.days_history,
-        )
+        amount_usd = float(body.get("amount_usd", 0))
+        days_history = int(body.get("days_history", 90))
+        result = _conversion.recommend(amount_usd=amount_usd, days_history=days_history)
+        return result, 200
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"detail": str(e)}, 500

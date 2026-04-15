@@ -1,4 +1,4 @@
-import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from ..services.coingecko_client import CoinGeckoClient
 from ..services.mempool_client import MempoolClient
 from .schemas import ChannelComparison, RemittanceResponse, SendTimeRecommendation
@@ -24,23 +24,36 @@ class RemittanceOptimizer:
         self.mempool = MempoolClient()
         self.fee_tracker = FeeTracker()
 
-    async def compare(self, amount_usd: float, frequency: str = "monthly") -> RemittanceResponse:
-        btc_price, fees, best_time = await asyncio.gather(
-            self.coingecko.get_price(),
-            self.mempool.get_recommended_fees(),
-            self.fee_tracker.get_best_send_time(),
-            return_exceptions=True,
-        )
+    def compare(
+        self, amount_usd: float, frequency: str = "monthly"
+    ) -> RemittanceResponse:
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            f_price = executor.submit(self.coingecko.get_price)
+            f_fees = executor.submit(self.mempool.get_recommended_fees)
+            f_time = executor.submit(self.fee_tracker.get_best_send_time)
 
-        btc_price = btc_price if not isinstance(btc_price, Exception) else 0.0
-        fees = fees if not isinstance(fees, Exception) else {}
-        best_time = best_time if not isinstance(best_time, Exception) else None
+            try:
+                btc_price = f_price.result()
+            except Exception:
+                btc_price = 0.0
+            try:
+                fees = f_fees.result()
+            except Exception:
+                fees = {}
+            try:
+                best_time = f_time.result()
+            except Exception:
+                best_time = None
 
         fee_sat_vb = fees.get("halfHourFee", 10) if isinstance(fees, dict) else 10
 
-        on_chain_fee_usd = (fee_sat_vb * 140 / 1e8) * btc_price if btc_price > 0 else 0.5
+        on_chain_fee_usd = (
+            (fee_sat_vb * 140 / 1e8) * btc_price if btc_price > 0 else 0.5
+        )
         lightning_fee_usd = max(amount_usd * 0.007, on_chain_fee_usd)
-        lightning_fee_percent = (lightning_fee_usd / amount_usd * 100) if amount_usd > 0 else 0.0
+        lightning_fee_percent = (
+            (lightning_fee_usd / amount_usd * 100) if amount_usd > 0 else 0.0
+        )
 
         channels: list[ChannelComparison] = []
 
@@ -68,11 +81,13 @@ class RemittanceOptimizer:
             )
         )
 
-        worst_fee_usd = max(ch.fee_usd for ch in channels if ch.name != "Lightning Network")
+        worst_fee_usd = max(
+            ch.fee_usd for ch in channels if ch.name != "Lightning Network"
+        )
         freq_multiplier = FREQUENCY_MULTIPLIERS.get(frequency, 1)
         annual_savings = (worst_fee_usd - lightning_fee_usd) * freq_multiplier * 12
 
-        send_time_rec: SendTimeRecommendation | None = None
+        send_time_rec = None
         if best_time and isinstance(best_time, dict):
             estimated_low = best_time.get("estimated_low_fee_sat_vb", fee_sat_vb)
             savings_pct = (
