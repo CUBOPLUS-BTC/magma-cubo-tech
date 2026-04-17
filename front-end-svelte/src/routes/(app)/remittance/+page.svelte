@@ -421,7 +421,7 @@
 				<CardContent class="space-y-6">
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 						{#each scenarios as scenario}
-							<div class="p-4 border-2 rounded-lg space-y-4 {scenario.name === 'Pesimista' ? 'border-red-400' : scenario.name === 'Base' ? 'border-amber-500' : 'border-green-500'}">
+							<div class="p-4 border-2 rounded-lg space-y-4 transition-all duration-300 hover:scale-105 hover:-translate-y-1 cursor-pointer {scenario.name === 'Pesimista' ? 'border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.6),0_0_60px_rgba(239,68,68,0.3)]' : scenario.name === 'Base' ? 'border-amber-500 hover:shadow-[0_0_30px_rgba(234,179,8,0.6),0_0_60px_rgba(234,179,8,0.3)]' : 'border-green-500 hover:shadow-[0_0_30px_rgba(34,197,94,0.6),0_0_60px_rgba(34,197,94,0.3)]'}">
 								<div class="flex items-center justify-between">
 									<h3 class="text-lg font-semibold">{scenario.name}</h3>
 								</div>

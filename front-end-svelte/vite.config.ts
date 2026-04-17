@@ -6,5 +6,8 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	resolve: {
 		conditions: ['svelte', 'browser', 'import']
+	},
+	server: {
+		port: 8080
 	}
 });
