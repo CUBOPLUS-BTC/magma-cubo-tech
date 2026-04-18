@@ -1,6 +1,8 @@
-# Vulk
+# Magma
 
 > CUBO+ Hackathon 2026 | "Don't trust, verify"
+
+Bitcoin financial toolkit for El Salvador and Latin America. Named after volcanic/geothermal Bitcoin mining (Volcano Energy, Lava Pool).
 
 ## Team
 
@@ -13,34 +15,33 @@
 
 ## Tech Stack
 
-- **Backend**: FastAPI (Python 3.11+) Dockerized
-- **Database**: PostgreSQL 16 Dockerized
-- **Frontend**: SvelteKit 2.57 + Svelte 5 + Tailwind 4 Cloudflare Pages
-- **ORM**: SQLAlchemy + Alembic (migrations)
-- **Validation**: Pydantic
-- **Auth**: Nostr NIP-98
+- **Backend**: Python 3.11+ (custom http.server, no framework)
+- **Database**: SQLite (dev) / PostgreSQL (prod)
+- **Frontend**: SvelteKit 2.57 + Svelte 5 (runes) + Tailwind 4 + shadcn-svelte
+- **Auth**: Nostr NIP-07/NIP-98 + LNURL-auth (LUD-04)
+- **Deploy**: Hetzner (backend) + Cloudflare Pages (frontend)
 
 ## Repository Structure
 
 ```
-/src                Backend Python (FastAPI) + Dockerfile
+/src                Backend Python + SQLite
 /front-end-svelte   SvelteKit app (Cloudflare Pages)
 /strategy           Business model & documentation (Non-Tech)
 ```
 
 ## Quick Start
 
-### Backend + Database (Docker)
+### Backend
 
 ```bash
+cd src
 cp .env.example .env
-docker compose up --build
+python main.py
 ```
 
 - API: http://localhost:8000
-- Swagger Docs: http://localhost:8000/docs
 
-### Frontend (SvelteKit)
+### Frontend
 
 ```bash
 cd front-end-svelte
@@ -53,7 +54,7 @@ bun run dev
 
 ### Deploy
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for full Hetzner + Cloudflare Pages guide.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Hetzner + Cloudflare Pages guide.
 
 ## Submission
 

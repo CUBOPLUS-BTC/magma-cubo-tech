@@ -11,11 +11,12 @@
   import { Label } from '$lib/components/ui/label';
   import { Badge } from '$lib/components/ui/badge';
   import CurrencyBtc from 'phosphor-svelte/lib/CurrencyBtc';
+  import SavingsChart from '$lib/components/savings-chart.svelte';
 
   let monthlyAmount = $state(10);
   let years = $state(10);
-  let projection = $state<ProjectionResult | null>(null);
-  let progress = $state<SavingsProgress | null>(null);
+  let projection = $state.raw<ProjectionResult | null>(null);
+  let progress = $state.raw<SavingsProgress | null>(null);
   let isProjecting = $state(false);
   let isSaving = $state(false);
   let depositAmount = $state(10);
@@ -76,7 +77,7 @@
 </script>
 
 <svelte:head>
-  <title>{i18n.t.nav.savings} {i18n.t.app.titleSuffix}</title>
+  <title>{i18n.t.savings.title} {i18n.t.app.titleSuffix}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -146,6 +147,10 @@
             </p>
           </div>
         </div>
+
+        {#if projection.monthly_data.length > 0}
+          <SavingsChart data={projection.monthly_data} />
+        {/if}
       {/if}
     </CardContent>
   </Card>

@@ -6,6 +6,7 @@ function createAlerts() {
   let alerts = $state<Alert[]>([]);
   let status = $state<AlertStatus | null>(null);
   let lastFetch = $state(0);
+  let failCount = $state(0);
   let _statusInterval: ReturnType<typeof setInterval> | null = null;
   let _alertInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -17,8 +18,17 @@ function createAlerts() {
     async fetchStatus(): Promise<void> {
       try {
         const res = await fetch(endpoints.alerts.status);
-        if (res.ok) status = await res.json();
-      } catch { /* silent */ }
+        if (res.ok) {
+          status = await res.json();
+          failCount = 0;
+        } else {
+          failCount++;
+          if (failCount >= 3) this.stopPolling();
+        }
+      } catch {
+        failCount++;
+        if (failCount >= 3) this.stopPolling();
+      }
     },
 
     async fetchAlerts(): Promise<void> {
@@ -30,8 +40,15 @@ function createAlerts() {
             alerts = [...data.alerts, ...alerts].slice(0, 50);
             lastFetch = Math.max(...data.alerts.map((a: Alert) => a.created_at));
           }
+          failCount = 0;
+        } else {
+          failCount++;
+          if (failCount >= 3) this.stopPolling();
         }
-      } catch { /* silent */ }
+      } catch {
+        failCount++;
+        if (failCount >= 3) this.stopPolling();
+      }
     },
 
     startPolling(): void {

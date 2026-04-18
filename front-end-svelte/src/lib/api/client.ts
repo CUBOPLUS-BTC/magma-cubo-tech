@@ -19,6 +19,14 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(url, { ...options, headers });
 
+  if (res.status === 401) {
+    auth.logout();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new ApiError(401, 'Session expired');
+  }
+
   if (!res.ok) {
     throw new ApiError(res.status, await res.text());
   }

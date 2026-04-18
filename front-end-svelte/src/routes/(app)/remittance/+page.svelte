@@ -14,10 +14,11 @@
 	import Clock from 'phosphor-svelte/lib/Clock';
 	import ArrowsLeftRight from 'phosphor-svelte/lib/ArrowsLeftRight';
 	import Lightning from 'phosphor-svelte/lib/Lightning';
+	import Geo from '$lib/components/geo.svelte';
 
 	let amountUsd = $state(200);
 	let frequency = $state<string>('monthly');
-	let result = $state<RemittanceResult | null>(null);
+	let result = $state.raw<RemittanceResult | null>(null);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 
@@ -45,7 +46,15 @@
 </svelte:head>
 
 <div class="space-y-8">
-	<h1 class="font-heading text-2xl font-bold tracking-tight">{i18n.t.remittance.title}</h1>
+	<div>
+		<h1 class="font-heading text-2xl font-bold tracking-tight">{i18n.t.remittance.title}</h1>
+		<p class="text-sm text-muted-foreground mt-1">{i18n.t.remittance.corridor}</p>
+	</div>
+
+	<div class="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-4">
+		<Lightning size={18} class="text-primary mt-0.5 shrink-0" />
+		<p class="text-sm text-primary/80">{i18n.t.remittance.legalTender}</p>
+	</div>
 
 	<Card>
 		<CardHeader>
@@ -95,30 +104,61 @@
 	{/if}
 
 	{#if isLoading}
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-			{#each [1, 2, 3] as _, i (i)}
+		<div class="space-y-6">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<Card>
-					<CardHeader>
-						<Skeleton class="h-6 w-28" />
-						<Skeleton class="h-4 w-20" />
-					</CardHeader>
-					<CardContent class="space-y-3">
-						<Skeleton class="h-7 w-32" />
-						<Skeleton class="h-5 w-24" />
+					<CardContent class="pt-6 space-y-4">
+						<Skeleton class="h-4 w-32" />
+						<Skeleton class="h-8 w-24" />
+						<Skeleton class="h-4 w-full" />
 					</CardContent>
 				</Card>
-			{/each}
+				<Card>
+					<CardContent class="pt-6 space-y-4">
+						<Skeleton class="h-4 w-32" />
+						<Skeleton class="h-8 w-24" />
+						<Skeleton class="h-4 w-full" />
+					</CardContent>
+				</Card>
+			</div>
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<Card>
+					<CardContent class="pt-6 space-y-3">
+						<Skeleton class="h-5 w-20" />
+						<Skeleton class="h-6 w-16" />
+						<Skeleton class="h-4 w-full" />
+					</CardContent>
+				</Card>
+				<Card>
+					<CardContent class="pt-6 space-y-3">
+						<Skeleton class="h-5 w-20" />
+						<Skeleton class="h-6 w-16" />
+						<Skeleton class="h-4 w-full" />
+					</CardContent>
+				</Card>
+				<Card>
+					<CardContent class="pt-6 space-y-3">
+						<Skeleton class="h-5 w-20" />
+						<Skeleton class="h-6 w-16" />
+						<Skeleton class="h-4 w-full" />
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	{:else if !result}
 		<div class="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center space-y-3">
-			<Lightning size={36} class="mx-auto text-muted-foreground/40" weight="regular" />
+			<Geo state="waiting" class="w-24 h-24 mx-auto" />
 			<p class="text-muted-foreground text-sm">{i18n.t.remittance.subtitle}</p>
-			<p class="text-xs text-muted-foreground/70">{i18n.t.remittance.amount}: ${amountUsd} &middot; {i18n.t.remittance.frequency}: {i18n.t.remittance.frequencies[frequency as keyof typeof i18n.t.remittance.frequencies]}</p>
 		</div>
 	{/if}
 
 	{#if result}
 		<div class="space-y-6">
+			<div class="flex items-center gap-3">
+				<Geo state="success" class="w-16 h-16 shrink-0" />
+				<p class="text-sm font-medium text-foreground">{i18n.t.remittance.resultsReady}</p>
+			</div>
+
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<SavingsCard annualSavings={result.annual_savings} bestChannel={result.best_channel} />
 

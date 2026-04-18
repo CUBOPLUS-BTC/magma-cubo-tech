@@ -14,9 +14,10 @@ from app.auth.routes import (
     handle_lnurl_create,
     handle_lnurl_callback,
     handle_lnurl_status,
-    handle_dev_login,
 )
 from app.remittance.routes import handle_compare, handle_fees
+from app.pension.routes import handle_projection as handle_pension_projection
+from app.network.routes import handle_network_status
 from app.savings.routes import (
     handle_projection,
     handle_create_goal,
@@ -42,7 +43,6 @@ ROUTES = [
     ("POST", re.compile(r"^/auth/lnurl$"), "_auth_lnurl_create"),
     ("GET", re.compile(r"^/auth/lnurl-callback$"), "_auth_lnurl_callback"),
     ("GET", re.compile(r"^/auth/lnurl-status$"), "_auth_lnurl_status"),
-    ("POST", re.compile(r"^/auth/dev-login$"), "_auth_dev_login"),
     ("POST", re.compile(r"^/remittance/compare$"), "_remittance_compare"),
     ("GET", re.compile(r"^/remittance/fees$"), "_remittance_fees"),
     ("POST", re.compile(r"^/savings/project$"), "_savings_project"),
@@ -52,6 +52,8 @@ ROUTES = [
     ("GET", re.compile(r"^/achievements$"), "_achievements"),
     ("GET", re.compile(r"^/alerts$"), "_alerts"),
     ("GET", re.compile(r"^/alerts/status$"), "_alert_status"),
+    ("POST", re.compile(r"^/pension/projection$"), "_pension_projection"),
+    ("GET", re.compile(r"^/network/status$"), "_network_status"),
 ]
 
 
@@ -89,6 +91,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
     def _dispatch(self) -> None:
+        import time
+
         raw_path = self.path
         path = raw_path.split("?")[0]
         query_string = raw_path.split("?", 1)[1] if "?" in raw_path else ""
@@ -101,8 +105,13 @@ class Handler(BaseHTTPRequestHandler):
             if m:
                 handler_fn = getattr(self, handler_name)
                 body = self._read_body()
+                start = time.time()
                 data, status = handler_fn(m.groupdict(), body, query)
+                elapsed = (time.time() - start) * 1000
                 self._send_json(data, status)
+                print(
+                    f"[{self.address_string()}] {self.command} {path} {status} {elapsed:.1f}ms"
+                )
                 return
         self._send_json({"detail": "Not found"}, 404)
 
@@ -124,7 +133,7 @@ class Handler(BaseHTTPRequestHandler):
         return {"message": "Magma API - Don't trust, verify"}, 200
 
     def _health(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
-        return {"status": "ok", "service": "vulk-backend"}, 200
+        return {"status": "ok", "service": "magma-backend"}, 200
 
     def _price(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
         try:
@@ -147,14 +156,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def _auth_me(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
         auth = self.headers.get("Authorization", "")
-        return handle_me(auth)
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        return handle_me(auth, url=url, method=self.command)
 
     def _remittance_compare(
         self, params: dict, body: dict, query: dict
     ) -> tuple[dict, int]:
         result = handle_compare(body)
         auth_header = self.headers.get("Authorization", "")
-        me_data, me_status = handle_me(auth_header)
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        me_data, me_status = handle_me(auth_header, url=url, method=self.command)
         if me_status == 200:
             _achievement_engine.check_and_award(me_data["pubkey"], "remittance", {})
         return result
@@ -179,11 +190,6 @@ class Handler(BaseHTTPRequestHandler):
     ) -> tuple[dict, int]:
         return handle_lnurl_status(query)
 
-    def _auth_dev_login(
-        self, params: dict, body: dict, query: dict
-    ) -> tuple[dict, int]:
-        return handle_dev_login(body)
-
     def _savings_project(
         self, params: dict, body: dict, query: dict
     ) -> tuple[dict, int]:
@@ -191,7 +197,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def _savings_goal(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
         auth_header = self.headers.get("Authorization", "")
-        me_data, status = handle_me(auth_header)
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        me_data, status = handle_me(auth_header, url=url, method=self.command)
         if status != 200:
             return {"detail": "Authentication required"}, 401
         return handle_create_goal(body, me_data["pubkey"])
@@ -200,7 +207,8 @@ class Handler(BaseHTTPRequestHandler):
         self, params: dict, body: dict, query: dict
     ) -> tuple[dict, int]:
         auth_header = self.headers.get("Authorization", "")
-        me_data, status = handle_me(auth_header)
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        me_data, status = handle_me(auth_header, url=url, method=self.command)
         if status != 200:
             return {"detail": "Authentication required"}, 401
         result = handle_record_deposit(body, me_data["pubkey"])
@@ -216,14 +224,16 @@ class Handler(BaseHTTPRequestHandler):
         self, params: dict, body: dict, query: dict
     ) -> tuple[dict, int]:
         auth_header = self.headers.get("Authorization", "")
-        me_data, status = handle_me(auth_header)
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        me_data, status = handle_me(auth_header, url=url, method=self.command)
         if status != 200:
             return {"detail": "Authentication required"}, 401
         return handle_savings_progress(me_data["pubkey"])
 
     def _achievements(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
         auth_header = self.headers.get("Authorization", "")
-        me_data, status = handle_me(auth_header)
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        me_data, status = handle_me(auth_header, url=url, method=self.command)
         if status != 200:
             return {"detail": "Authentication required"}, 401
         return handle_achievements(me_data["pubkey"])
@@ -233,6 +243,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def _alert_status(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
         return handle_alert_status(_monitor)
+
+    def _pension_projection(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_pension_projection(body)
+
+    def _network_status(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_network_status(body)
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):

@@ -5,10 +5,7 @@ declare global {
 			message: string;
 			code?: string;
 		}
-		interface Locals {
-			/** pubkey extraída del header Nostr si presente */
-			pubkey?: string;
-		}
+		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

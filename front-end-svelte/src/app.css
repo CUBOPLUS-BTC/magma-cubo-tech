@@ -39,6 +39,17 @@
 	--sidebar-accent-foreground: oklch(0.22 0.04 40);
 	--sidebar-border: oklch(0.89 0.018 60);
 	--sidebar-ring: oklch(0.60 0.21 40);
+
+	/* Geo brand tokens (ABSOLUTOS — no cambian con el tema) */
+	--geo-body: #E5E7EB;
+	--geo-stroke: #9CA3AF;
+	--geo-eye: #111827;
+	--geo-shine: #FFFFFF;
+	--geo-primary: oklch(0.70 0.20 38);
+	--geo-blush: oklch(0.70 0.20 38 / 0.3);
+	--lamp-light: #fbbf24;
+	--lamp-glow: drop-shadow(0 0 6px var(--lamp-light));
+	--geo-shadow: rgba(0, 0, 0, 0.08);
 }
 
 .dark {
@@ -73,6 +84,10 @@
 	--sidebar-accent-foreground: oklch(0.93 0.008 80);
 	--sidebar-border: oklch(1 0.005 260 / 8%);
 	--sidebar-ring: oklch(0.70 0.20 38);
+
+	/* Geo: solo la sombra cambia en dark */
+	--geo-shadow: rgba(0, 0, 0, 0.5);
+	--lamp-glow: drop-shadow(0 0 10px var(--lamp-light));
 }
 
 @theme inline {
@@ -138,3 +153,17 @@
 		@apply text-sm;
 	}
 }
+
+/* =========================================
+   GEO — Animaciones de la mascota
+   ========================================= */
+@keyframes geo-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes geo-blink { 0%, 46%, 48%, 100% { transform: scaleY(1); } 47% { transform: scaleY(0.1); } }
+@keyframes geo-tilt { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(2deg); } 75% { transform: rotate(-2deg); } }
+@keyframes geo-vibrate { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(1px, 1px) rotate(1deg); } 50% { transform: translate(-1px, -1px) rotate(-1deg); } 75% { transform: translate(-1px, 1px) rotate(0deg); } }
+@keyframes geo-spark { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-20px) scale(0); opacity: 0; } }
+@keyframes geo-lamp-fast { 0%, 100% { opacity: 0.9; filter: drop-shadow(0 0 4px var(--lamp-light)); } 50% { opacity: 1; filter: var(--lamp-glow); } }
+@keyframes geo-float-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes geo-zzz { 0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(15px, -30px) scale(1.2); opacity: 0; } }
+@keyframes geo-bounce { 0%, 100% { transform: translateY(0) scaleY(1); } 40% { transform: translateY(-15px) scaleY(1.05); } 50% { transform: translateY(0) scaleY(0.9); } }
+@keyframes geo-confetti { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(30px) rotate(180deg); opacity: 0; } }

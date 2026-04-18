@@ -7,7 +7,6 @@ export const endpoints = {
     me: `${BASE}/auth/me`,
     lnurl: `${BASE}/auth/lnurl`,
     lnurlStatus: (k1: string) => `${BASE}/auth/lnurl-status?k1=${k1}`,
-    devLogin: `${BASE}/auth/dev-login`,
   },
   price: `${BASE}/price`,
   remittance: {
@@ -26,4 +25,10 @@ export const endpoints = {
     preferences: `${BASE}/alerts/preferences`,
   },
   achievements: `${BASE}/achievements`,
+  pension: {
+    projection: `${BASE}/pension/projection`,
+  },
+  network: {
+    status: `${BASE}/network/status`,
+  },
 } as const;

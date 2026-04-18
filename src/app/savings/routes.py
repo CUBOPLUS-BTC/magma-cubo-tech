@@ -1,5 +1,6 @@
 from .projector import SavingsProjector
 from .tracker import SavingsTracker
+from ..validation import validate_pubkey, validate_amount
 
 _projector = SavingsProjector()
 _tracker = SavingsTracker()
@@ -25,10 +26,13 @@ def handle_projection(body: dict) -> tuple[dict, int]:
 def handle_create_goal(body: dict, pubkey: str) -> tuple[dict, int]:
     """POST /savings/goal — Requires auth."""
     try:
+        if not validate_pubkey(pubkey):
+            return {"detail": "Invalid pubkey"}, 400
+
         monthly_target = float(body.get("monthly_target_usd", 0))
         target_years = int(body.get("target_years", 10))
 
-        if monthly_target <= 0:
+        if not validate_amount(monthly_target, min_val=1):
             return {"detail": "monthly_target_usd must be positive"}, 400
 
         result = _tracker.create_goal(pubkey, monthly_target, target_years)
@@ -40,9 +44,12 @@ def handle_create_goal(body: dict, pubkey: str) -> tuple[dict, int]:
 def handle_record_deposit(body: dict, pubkey: str) -> tuple[dict, int]:
     """POST /savings/deposit — Requires auth."""
     try:
+        if not validate_pubkey(pubkey):
+            return {"detail": "Invalid pubkey"}, 400
+
         amount_usd = float(body.get("amount_usd", 0))
 
-        if amount_usd <= 0:
+        if not validate_amount(amount_usd, min_val=1):
             return {"detail": "amount_usd must be positive"}, 400
 
         result = _tracker.record_deposit(pubkey, amount_usd)

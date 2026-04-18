@@ -12,9 +12,10 @@ FREQUENCY_MULTIPLIERS = {
 }
 
 TRADITIONAL_CHANNELS = [
-    ("Western Union", 8.0, "1-3 days"),
-    ("MoneyGram", 6.0, "1-2 days"),
+    ("Western Union", 7.5, "1-3 days"),
+    ("MoneyGram", 5.5, "1-2 days"),
     ("Bank Transfer", 4.0, "2-5 days"),
+    ("Strike", 0.1, "Seconds"),
 ]
 
 

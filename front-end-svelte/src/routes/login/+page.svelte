@@ -6,18 +6,16 @@
   import { Button } from '$lib/components/ui/button';
   import { Card } from '$lib/components/ui/card';
   import Mountains from 'phosphor-svelte/lib/Mountains';
+  import Geo from '$lib/components/geo.svelte';
   import QRCode from 'qrcode';
   import { onDestroy } from 'svelte';
 
-  let qrDataUrl = $state('');
-  let showQR = $state(false);
-  let hasNostrExtension = $state(false);
-  let isDev = $state(false);
+  type View = 'main' | 'qr' | 'nostr-help' | 'keys';
 
-  $effect(() => {
-    hasNostrExtension = !!(window as any).nostr;
-    isDev = window.location.hostname === 'localhost';
-  });
+  let view = $state<View>('main');
+  let qrDataUrl = $state('');
+  let generatedKeys = $state<{ nsec: string; npub: string } | null>(null);
+  let keysCopied = $state(false);
 
   async function handleLnurl() {
     try {
@@ -29,7 +27,7 @@
           margin: 2,
           color: { dark: '#000000', light: '#ffffff' },
         });
-        showQR = true;
+        view = 'qr';
 
         auth.startPolling(k1, () => {
           goto(resolve('/home'));
@@ -40,6 +38,10 @@
   }
 
   async function handleNostr() {
+    if (!(window as any).nostr) {
+      view = 'nostr-help';
+      return;
+    }
     try {
       await auth.loginWithNostr();
       goto(resolve('/home'));
@@ -47,18 +49,27 @@
     }
   }
 
-  async function handleDevLogin() {
+  async function handleCreateAccount() {
     try {
-      await auth.devLogin();
-      goto(resolve('/home'));
-    } catch {
+      generatedKeys = await auth.loginWithGeneratedKey();
+      view = 'keys';
+    } catch (e) {
+      console.error('Create account failed:', e);
     }
+  }
+
+  async function copyNsec() {
+    if (!generatedKeys) return;
+    await navigator.clipboard.writeText(generatedKeys.nsec);
+    keysCopied = true;
   }
 
   function handleCancel() {
     auth.stopPolling();
-    showQR = false;
+    view = 'main';
     qrDataUrl = '';
+    generatedKeys = null;
+    keysCopied = false;
     auth.clearError();
   }
 
@@ -73,20 +84,16 @@
 </svelte:head>
 
 <div class="flex min-h-screen bg-background">
-  <div class="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-center lg:p-12 border-r border-border">
-    <div class="space-y-8 max-w-md mx-auto">
-      <div class="flex items-center gap-3">
-        <Mountains class="size-10 text-primary" weight="bold" />
-        <span class="font-heading text-4xl font-bold text-foreground tracking-tight">{i18n.t.app.name}</span>
+  <div class="hidden lg:flex lg:w-1/2 lg:flex-col lg:items-center lg:justify-center lg:p-12 border-r border-border">
+    <div class="space-y-6 max-w-sm mx-auto text-center">
+      <Geo state="idle" class="w-40 h-40 mx-auto" />
+      <div class="flex items-center gap-3 justify-center">
+        <Mountains class="size-8 text-primary" weight="bold" />
+        <span class="font-heading text-3xl font-bold text-foreground tracking-tight">{i18n.t.app.name}</span>
       </div>
-      <div class="space-y-3">
-        <h1 class="font-heading text-3xl font-semibold text-foreground tracking-tight">
-          {i18n.t.app.tagline}
-        </h1>
-        <p class="text-muted-foreground text-sm leading-relaxed">
-          {i18n.t.app.description}
-        </p>
-      </div>
+      <p class="text-muted-foreground text-sm leading-relaxed">
+        {i18n.t.app.tagline}
+      </p>
     </div>
   </div>
 
@@ -99,7 +106,7 @@
 
       <Card class="border-border bg-card">
         <div class="p-6 space-y-5">
-          {#if !showQR}
+          {#if view === 'main'}
             <div class="space-y-1.5 text-center">
               <h2 class="font-heading text-xl font-semibold tracking-tight text-card-foreground">
                 {i18n.t.login.connect}
@@ -120,32 +127,19 @@
                 {i18n.t.login.loginWithLightning}
               </Button>
 
-              {#if hasNostrExtension}
-                <Button
-                  variant="outline"
-                  onclick={handleNostr}
-                  disabled={auth.isLoading}
-                  size="lg"
-                  class="w-full font-medium"
-                >
-                  <svg class="size-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M8 12l2 2 4-4"/>
-                  </svg>
-                  {i18n.t.login.loginWithNostr}
-                </Button>
-              {/if}
-
-              {#if isDev}
-                <Button
-                  variant="secondary"
-                  onclick={handleDevLogin}
-                  disabled={auth.isLoading}
-                  class="w-full h-10 text-sm rounded-xl"
-                >
-                  Dev Login
-                </Button>
-              {/if}
+              <Button
+                variant="outline"
+                onclick={handleNostr}
+                disabled={auth.isLoading}
+                size="lg"
+                class="w-full font-medium"
+              >
+                <svg class="size-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M8 12l2 2 4-4"/>
+                </svg>
+                {i18n.t.login.loginWithNostr}
+              </Button>
             </div>
 
             {#if auth.isLoading}
@@ -158,7 +152,133 @@
             {#if auth.error}
               <p class="text-sm text-destructive text-center">{auth.error}</p>
             {/if}
-          {:else}
+
+          {:else if view === 'nostr-help'}
+            <div class="space-y-1.5 text-center">
+              <h2 class="font-heading text-xl font-semibold tracking-tight text-card-foreground">
+                Nostr
+              </h2>
+              <p class="text-muted-foreground text-sm">{i18n.t.login.nostrNeeded}</p>
+            </div>
+
+            <div class="space-y-3">
+              <Button
+                onclick={handleCreateAccount}
+                disabled={auth.isLoading}
+                size="lg"
+                class="w-full font-medium text-base"
+              >
+                <svg class="size-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <line x1="19" y1="8" x2="19" y2="14"/>
+                  <line x1="16" y1="11" x2="22" y2="11"/>
+                </svg>
+                {i18n.t.login.nostrCreateAccount}
+              </Button>
+
+              <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                  <span class="w-full border-t border-border"></span>
+                </div>
+                <div class="relative flex justify-center text-xs">
+                  <span class="bg-card px-2 text-muted-foreground">{i18n.t.login.nostrGetExtension}</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <a
+                  href="https://getalby.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Alby
+                </a>
+                <a
+                  href="https://chromewebstore.google.com/detail/nos2x/kpgefcfmnafjgpblomihpgcdmpdobcaa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  nos2x
+                </a>
+              </div>
+
+              {#if auth.isLoading}
+                <div class="flex items-center justify-center gap-2">
+                  <span class="animate-spin size-4 border-2 border-primary border-t-transparent rounded-full"></span>
+                  <span class="text-sm text-muted-foreground">{i18n.t.common.loading}</span>
+                </div>
+              {/if}
+
+              {#if auth.error}
+                <p class="text-sm text-destructive text-center">{auth.error}</p>
+              {/if}
+
+              <Button
+                variant="ghost"
+                onclick={handleCancel}
+                size="sm"
+                class="w-full"
+              >
+                {i18n.t.login.nostrBack}
+              </Button>
+            </div>
+
+          {:else if view === 'keys'}
+            <div class="space-y-1.5 text-center">
+              <Geo state="success" class="w-16 h-16 mx-auto" />
+              <h2 class="font-heading text-xl font-semibold tracking-tight text-card-foreground">
+                {i18n.t.login.nostrAccountCreated}
+              </h2>
+              <p class="text-muted-foreground text-sm">{i18n.t.login.nostrSaveWarning}</p>
+            </div>
+
+            {#if generatedKeys}
+              <div class="space-y-3">
+                <div class="space-y-1.5">
+                  <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{i18n.t.login.nostrPrivateKey}</span>
+                  <div class="relative">
+                    <code class="block w-full rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-xs break-all font-mono text-destructive select-all">
+                      {generatedKeys.nsec}
+                    </code>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5">
+                  <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{i18n.t.login.nostrPublicKey}</span>
+                  <code class="block w-full rounded-xl bg-muted p-3 text-xs break-all font-mono text-muted-foreground select-all">
+                    {generatedKeys.npub}
+                  </code>
+                </div>
+
+                <div class="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                  <svg class="size-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <p class="text-xs text-amber-700 dark:text-amber-300">{i18n.t.login.nostrBackupWarning}</p>
+                </div>
+
+                <Button
+                  variant="outline"
+                  onclick={copyNsec}
+                  class="w-full"
+                >
+                  {keysCopied ? i18n.t.login.nostrCopied : i18n.t.login.nostrCopyKey}
+                </Button>
+
+                <Button
+                  onclick={() => goto(resolve('/home'))}
+                  class="w-full"
+                >
+                  {i18n.t.login.nostrContinue}
+                </Button>
+              </div>
+            {/if}
+
+          {:else if view === 'qr'}
             <div class="space-y-1.5 text-center">
               <h2 class="font-heading text-xl font-semibold tracking-tight text-card-foreground">
                 {i18n.t.login.scanQR}
@@ -171,6 +291,19 @@
                 <img src={qrDataUrl} alt="LNURL-auth QR" class="rounded-xl" width="240" height="240" />
               {/if}
             </div>
+
+            {#if auth.lnurlData}
+              <a
+                href="lightning:{auth.lnurlData.lnurl}"
+                class="inline-flex items-center justify-center gap-2 w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:bg-secondary/80 transition-colors"
+              >
+                <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z"/>
+                </svg>
+                Open in wallet
+              </a>
+              <p class="text-xs text-muted-foreground text-center">Works with Blink, Phoenix, Zeus, and other Lightning wallets</p>
+            {/if}
 
             <div class="flex items-center justify-center gap-2">
               <span class="animate-pulse size-2 rounded-full bg-primary"></span>

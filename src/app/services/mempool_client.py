@@ -17,7 +17,7 @@ class MempoolClient:
             if now < expiry:
                 return data
 
-        req = urllib.request.Request(url, headers={"User-Agent": "Vulk/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Magma/1.0"})
         with urllib.request.urlopen(req, timeout=8) as response:
             data = json.loads(response.read().decode())
 
@@ -43,3 +43,11 @@ class MempoolClient:
     def get_recommended_fees(self) -> dict:
         url = f"{self.base_url}/v1/fees/recommended"
         return self._cached_get("fees", url, 60)
+
+    def get_block_tip_height(self) -> int:
+        url = f"{self.base_url}/blocks/tip/height"
+        return int(self._cached_get("block_height", url, 60))
+
+    def get_mempool_info(self) -> dict:
+        url = f"{self.base_url}/mempool"
+        return self._cached_get("mempool_info", url, 60)

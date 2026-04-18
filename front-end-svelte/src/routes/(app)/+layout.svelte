@@ -3,7 +3,6 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { auth } from '$lib/stores/auth.svelte';
-  import { browser } from '$app/environment';
   import { i18n } from '$lib/i18n/index.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Separator } from '$lib/components/ui/separator';
@@ -11,21 +10,26 @@
   import Flame from 'phosphor-svelte/lib/Flame';
   import Mountains from 'phosphor-svelte/lib/Mountains';
   import PaperPlaneTilt from 'phosphor-svelte/lib/PaperPlaneTilt';
-  import Vault from 'phosphor-svelte/lib/Vault';
+  import PiggyBank from 'phosphor-svelte/lib/PiggyBank';
+  import CurrencyBtc from 'phosphor-svelte/lib/CurrencyBtc';
   import Door from 'phosphor-svelte/lib/Door';
   import Moon from 'phosphor-svelte/lib/Moon';
   import Sun from 'phosphor-svelte/lib/Sun';
+  import Globe from 'phosphor-svelte/lib/Globe';
 
   let { children } = $props();
 
-  if (browser && !auth.isAuthenticated) {
-    goto(resolve('/login'), { replaceState: true });
-  }
+  $effect(() => {
+    if (!auth.isAuthenticated) {
+      goto(resolve('/login'), { replaceState: true });
+    }
+  });
 
   const navItems = $derived([
     { href: '/home', icon: Flame, label: i18n.t.nav.home },
     { href: '/remittance', icon: PaperPlaneTilt, label: i18n.t.nav.remittance },
-    { href: '/savings', icon: Vault, label: i18n.t.nav.savings },
+    { href: '/pension', icon: PiggyBank, label: i18n.t.nav.pension },
+    { href: '/savings', icon: CurrencyBtc, label: i18n.t.nav.savings },
   ]);
 
   let currentPath = $derived(page.url.pathname);
@@ -49,7 +53,7 @@
     <nav class="flex flex-1 flex-col gap-0.5">
       {#each navItems as item (item.href)}
         <a
-          href={resolve(item.href as '/home' | '/remittance' | '/savings')}
+          href={resolve(item.href as '/home' | '/remittance' | '/pension' | '/savings')}
           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors
             {currentPath === item.href
               ? 'bg-primary/10 text-primary font-semibold'
@@ -69,6 +73,12 @@
         <Moon size={18} class="hidden dark:block" />
         {i18n.t.nav.theme}
       </Button>
+      <Button variant="ghost" size="sm"
+        class="justify-start gap-3 rounded-xl text-sidebar-foreground/55 hover:text-sidebar-foreground"
+        onclick={() => i18n.setLocale(i18n.locale === 'en' ? 'es' : 'en')}>
+        <Globe size={18} />
+        {i18n.locale === 'en' ? 'ES' : 'EN'}
+      </Button>
       <Button variant="ghost" size="sm" class="justify-start gap-3 rounded-xl text-sidebar-foreground/55 hover:text-red-500" onclick={handleLogout}>
         <Door size={18} />
         {i18n.t.nav.logout}
@@ -86,7 +96,7 @@
 <nav class="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-border bg-card/95 backdrop-blur-sm px-2 py-2.5 lg:hidden">
   {#each navItems as item (item.href)}
     <a
-      href={resolve(item.href as '/home' | '/remittance' | '/savings')}
+      href={resolve(item.href as '/home' | '/remittance' | '/pension' | '/savings')}
       class="flex flex-col items-center gap-1 px-2 py-1 text-[11px] transition-colors
         {currentPath === item.href
           ? 'text-primary font-semibold'

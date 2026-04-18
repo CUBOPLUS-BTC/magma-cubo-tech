@@ -1,5 +1,5 @@
 export interface ChannelComparison {
-  name: 'Lightning' | 'On-chain' | 'Traditional';
+  name: string;
   fee_percent: number;
   fee_usd: number;
   amount_received: number;

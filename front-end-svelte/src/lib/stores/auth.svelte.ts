@@ -1,5 +1,7 @@
 import { browser } from '$app/environment';
 import { endpoints } from '$lib/api/endpoints';
+import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools/pure';
+import { nsecEncode, npubEncode } from 'nostr-tools/nip19';
 
 const TOKEN_KEY = 'magma_token';
 const PUBKEY_KEY = 'magma_pubkey';
@@ -124,27 +126,51 @@ function createAuth() {
       }
     },
 
-    async devLogin(): Promise<void> {
+    async loginWithGeneratedKey(): Promise<{ nsec: string; npub: string }> {
       isLoading = true;
       error = null;
 
       try {
-        const res = await fetch(endpoints.auth.devLogin, {
+        const sk = generateSecretKey();
+        const pubkeyHex = getPublicKey(sk);
+
+        const challengeRes = await fetch(endpoints.auth.challenge, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ pubkey: pubkeyHex }),
         });
-        if (!res.ok) throw new Error('Dev login disabled');
-        const data = await res.json();
+        if (!challengeRes.ok) throw new Error('Failed to get challenge');
+        const { challenge } = await challengeRes.json();
+
+        const event = finalizeEvent({
+          kind: 27235,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: [['u', window.location.origin], ['method', 'GET']],
+          content: challenge,
+        }, sk);
+
+        const verifyRes = await fetch(endpoints.auth.verify, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ signed_event: event, challenge }),
+        });
+        if (!verifyRes.ok) throw new Error('Signature verification failed');
+        const data = await verifyRes.json();
 
         token = data.token;
         publicKey = data.pubkey;
+
+        const nsec = nsecEncode(sk);
+        const npub = npubEncode(pubkeyHex);
+
         if (browser) {
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(PUBKEY_KEY, data.pubkey);
         }
+
+        return { nsec, npub };
       } catch (e) {
-        error = e instanceof Error ? e.message : 'Dev login failed';
+        error = e instanceof Error ? e.message : 'Account creation failed';
         throw e;
       } finally {
         isLoading = false;
@@ -166,12 +192,34 @@ function createAuth() {
       if (browser) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(PUBKEY_KEY);
+        localStorage.removeItem('magma_nsec');
       }
     },
 
     getAuthHeader(): string | null {
       if (!token) return null;
       return `Bearer ${token}`;
+    },
+
+    async publishToNostr(content: string): Promise<void> {
+      try {
+        const nostr = (window as any).nostr;
+        if (!nostr) return;
+        const event = await nostr.signEvent({
+          kind: 1,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: [['t', 'bitcoin'], ['t', 'magma']],
+          content,
+        });
+        const ws = new WebSocket('wss://relay.damus.io');
+        ws.onopen = () => {
+          ws.send(JSON.stringify(['EVENT', event]));
+          setTimeout(() => ws.close(), 3000);
+        };
+        ws.onerror = () => ws.close();
+      } catch {
+        // User cancelled signing or relay unavailable
+      }
     },
   };
 }

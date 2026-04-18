@@ -1,0 +1,9 @@
+{
+  "name": "Magma - Bitcoin Financial Toolkit",
+  "short_name": "Magma",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#cc5500",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

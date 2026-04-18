@@ -5,8 +5,10 @@ import secrets
 
 from .lnurl import create_lnurl_challenge, verify_lnurl_callback, get_lnurl_status
 from .sessions import create_session, validate_session
+from ..validation import validate_pubkey
 
 _challenges: dict[str, tuple[str, float]] = {}
+_rate_limits: dict[str, list[float]] = {}
 
 
 def handle_challenge(body: dict) -> tuple[dict, int]:
@@ -14,6 +16,19 @@ def handle_challenge(body: dict) -> tuple[dict, int]:
     pubkey = body.get("pubkey", "")
     if not pubkey:
         return {"detail": "pubkey is required"}, 400
+
+    if not validate_pubkey(pubkey):
+        return {"detail": "Invalid pubkey format"}, 400
+
+    now = time.time()
+    if pubkey in _rate_limits:
+        _rate_limits[pubkey] = [t for t in _rate_limits[pubkey] if now - t < 60]
+        if len(_rate_limits[pubkey]) >= 5:
+            return {"detail": "Too many requests"}, 429
+    else:
+        _rate_limits[pubkey] = []
+
+    _rate_limits[pubkey].append(now)
 
     challenge = secrets.token_hex(32)
     created_at = int(time.time())
@@ -32,6 +47,9 @@ def handle_verify(body: dict) -> tuple[dict, int]:
     pubkey = event_data.get("pubkey", "")
     if not pubkey:
         return {"detail": "Missing pubkey in signed_event"}, 401
+
+    if not validate_pubkey(pubkey):
+        return {"detail": "Invalid pubkey format"}, 401
 
     stored = _challenges.pop(pubkey, None)
     if stored is None:
@@ -72,7 +90,9 @@ def handle_verify(body: dict) -> tuple[dict, int]:
     return {"status": "ok", "token": token, "pubkey": pubkey}, 200
 
 
-def handle_me(authorization: str) -> tuple[dict, int]:
+def handle_me(
+    authorization: str, url: str = "", method: str = "GET"
+) -> tuple[dict, int]:
     """GET /auth/me — supports both Nostr and Bearer token auth"""
     if not authorization:
         return {"detail": "Missing authorization"}, 401
@@ -85,7 +105,7 @@ def handle_me(authorization: str) -> tuple[dict, int]:
             return {"detail": "Invalid or expired token"}, 401
         return {"pubkey": pubkey, "created_at": int(time.time())}, 200
 
-    # Nostr auth (legacy)
+    # Nostr auth (NIP-98)
     if authorization.startswith("Nostr "):
         try:
             event_base64 = authorization[6:]
@@ -94,6 +114,10 @@ def handle_me(authorization: str) -> tuple[dict, int]:
             pubkey = event.get("pubkey", "")
             if not pubkey:
                 return {"detail": "Invalid event"}, 401
+            from .nostr_verify import verify_nip98_event
+
+            if not verify_nip98_event(event, url, method):
+                return {"detail": "Invalid Nostr signature"}, 401
             return {"pubkey": pubkey, "created_at": int(time.time())}, 200
         except Exception:
             return {"detail": "Invalid authorization header"}, 401
@@ -135,15 +159,3 @@ def handle_lnurl_status(query: dict) -> tuple[dict, int]:
 
     result = get_lnurl_status(k1)
     return result, 200
-
-
-def handle_dev_login(body: dict) -> tuple[dict, int]:
-    """POST /auth/dev-login — Dev-only login, disabled in production."""
-    from ..config import settings
-
-    if "localhost" not in settings.PUBLIC_URL:
-        return {"detail": "Dev login is disabled in production"}, 403
-
-    pubkey = body.get("pubkey", "dev_" + secrets.token_hex(16))
-    token = create_session(pubkey)
-    return {"status": "ok", "token": token, "pubkey": pubkey}, 200
