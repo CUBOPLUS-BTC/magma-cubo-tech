@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { hasNip07 } from '$lib/nostr/nip07';
 	import { nip19, generateSecretKey, getPublicKey } from 'nostr-tools';
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
@@ -20,11 +22,25 @@
 	let generatedKeys = $state<{ nsec: string; npub: string } | null>(null);
 	let copiedNsec = $state(false);
 	let copiedNpub = $state(false);
+	let extensionAvailable = $state(false);
+
+	onMount(() => {
+		extensionAvailable = hasNip07();
+	});
 
 	async function handleConnect() {
 		if (!key.trim()) return;
 		try {
 			await auth.login(key.trim());
+			goto('/home');
+		} catch {
+			// error shown via auth.error
+		}
+	}
+
+	async function handleExtensionLogin() {
+		try {
+			await auth.loginWithExtension();
 			goto('/home');
 		} catch {
 			// error shown via auth.error
@@ -91,8 +107,28 @@
 				<div class="p-6 space-y-5">
 					<div class="space-y-1 text-center">
 						<h2 class="font-heading text-xl font-semibold tracking-tight text-card-foreground">Connect Your Key</h2>
-						<p class="text-muted-foreground text-xs">Enter your Nostr private key to get started</p>
+						<p class="text-muted-foreground text-xs">Sign in with a Nostr extension or paste your key</p>
 					</div>
+
+					{#if extensionAvailable}
+						<Button
+							onclick={handleExtensionLogin}
+							disabled={auth.isLoading}
+							class="w-full h-10 font-medium"
+						>
+							<Lightning weight="fill" class="size-4 mr-2" />
+							Sign in with Nostr extension
+						</Button>
+
+						<div class="relative">
+							<div class="absolute inset-0 flex items-center">
+								<span class="w-full border-t border-border"></span>
+							</div>
+							<div class="relative flex justify-center text-xs">
+								<span class="bg-card px-2 text-muted-foreground">or paste your key</span>
+							</div>
+						</div>
+					{/if}
 
 					<div class="space-y-4">
 						<div class="space-y-2">

@@ -1,16 +1,23 @@
 import { browser } from '$app/environment';
 import { nip19, getPublicKey, finalizeEvent, generateSecretKey } from 'nostr-tools';
+import type { EventTemplate } from 'nostr-tools';
 import { endpoints } from '$lib/api/endpoints';
+import { getNip07Signer } from '$lib/nostr/nip07';
 
-const KEY_STORAGE = 'magma_nsec';
+const NSEC_STORAGE = 'magma_nsec';
+const EVENT_STORAGE = 'magma_auth_event';
 
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
-}
+type SignedAuthEvent = {
+  id: string;
+  pubkey: string;
+  sig: string;
+  kind: number;
+  created_at: number;
+  tags: string[][];
+  content: string;
+};
+
+type EventSigner = (tpl: EventTemplate) => Promise<SignedAuthEvent> | SignedAuthEvent;
 
 function decodePrivateKey(input: string): Uint8Array {
   const trimmed = input.trim();
@@ -20,21 +27,65 @@ function decodePrivateKey(input: string): Uint8Array {
     return decoded.data as Uint8Array;
   }
   if (/^[0-9a-f]{64}$/i.test(trimmed)) {
-    return hexToBytes(trimmed);
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) bytes[i] = parseInt(trimmed.slice(i * 2, i * 2 + 2), 16);
+    return bytes;
   }
   throw new Error('Invalid key format. Use nsec1... or 64-char hex.');
 }
 
-function createAuth() {
-  const stored = browser ? localStorage.getItem(KEY_STORAGE) : null;
+function loadStoredPubkey(): string | null {
+  if (!browser) return null;
+  const nsec = localStorage.getItem(NSEC_STORAGE);
+  if (nsec) {
+    try { return getPublicKey(decodePrivateKey(nsec)); } catch { /* fall through */ }
+  }
+  const eventB64 = localStorage.getItem(EVENT_STORAGE);
+  if (eventB64) {
+    try { return (JSON.parse(atob(eventB64)) as SignedAuthEvent).pubkey; } catch { /* noop */ }
+  }
+  return null;
+}
 
-  let secretKey = $state<Uint8Array | null>(stored ? hexToBytes(stored) : null);
-  let publicKey = $state<string | null>(stored ? getPublicKey(hexToBytes(stored)) : null);
+function createAuth() {
+  const initialPubkey = loadStoredPubkey();
+  let publicKey = $state<string | null>(initialPubkey);
   let isLoading = $state(false);
   let error = $state<string | null>(null);
 
+  async function runAuthFlow(pubkey: string, sign: EventSigner): Promise<SignedAuthEvent> {
+    const challengeRes = await fetch(endpoints.auth.challenge, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pubkey }),
+    });
+    if (!challengeRes.ok) throw new Error('Failed to get challenge');
+    const { challenge } = await challengeRes.json();
+
+    const event = await sign({
+      kind: 27235,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [
+        ['u', endpoints.auth.verify],
+        ['method', 'POST'],
+        ['challenge', challenge],
+      ],
+      content: '',
+    });
+
+    const verifyRes = await fetch(endpoints.auth.verify, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signed_event: event, challenge }),
+    });
+    if (!verifyRes.ok) throw new Error('Authentication failed');
+
+    if (browser) localStorage.setItem(EVENT_STORAGE, btoa(JSON.stringify(event)));
+    return event;
+  }
+
   return {
-    get isAuthenticated() { return !!secretKey; },
+    get isAuthenticated() { return !!publicKey; },
     get publicKey() { return publicKey; },
     get isLoading() { return isLoading; },
     get error() { return error; },
@@ -44,46 +95,34 @@ function createAuth() {
     async login(nsecOrHex: string) {
       isLoading = true;
       error = null;
-
       try {
         const sk = decodePrivateKey(nsecOrHex);
         const pk = getPublicKey(sk);
-
-        const challengeRes = await fetch(endpoints.auth.challenge, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pubkey: pk }),
-        });
-
-        if (!challengeRes.ok) throw new Error('Failed to get challenge');
-        const { challenge } = await challengeRes.json();
-
-        const event = finalizeEvent({
-          kind: 27235,
-          created_at: Math.floor(Date.now() / 1000),
-          tags: [
-            ['u', endpoints.auth.verify],
-            ['method', 'POST'],
-            ['challenge', challenge],
-          ],
-          content: '',
-        }, sk);
-
-        const verifyRes = await fetch(endpoints.auth.verify, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ signed_event: event, challenge }),
-        });
-
-        if (!verifyRes.ok) throw new Error('Authentication failed');
-
-        const skHex = Array.from(sk).map(b => b.toString(16).padStart(2, '0')).join('');
-        secretKey = sk;
+        await runAuthFlow(pk, (tpl) => finalizeEvent(tpl, sk));
+        if (browser) localStorage.setItem(NSEC_STORAGE, nip19.nsecEncode(sk));
         publicKey = pk;
-        if (browser) localStorage.setItem(KEY_STORAGE, skHex);
-
       } catch (e) {
         error = e instanceof Error ? e.message : 'Authentication failed';
+        throw e;
+      } finally {
+        isLoading = false;
+      }
+    },
+
+    async loginWithExtension() {
+      const signer = getNip07Signer();
+      if (!signer) {
+        error = 'No Nostr extension found. Install nos2x or Alby.';
+        throw new Error(error);
+      }
+      isLoading = true;
+      error = null;
+      try {
+        const pk = await signer.getPublicKey();
+        await runAuthFlow(pk, (tpl) => signer.signEvent(tpl));
+        publicKey = pk;
+      } catch (e) {
+        error = e instanceof Error ? e.message : 'Extension login failed';
         throw e;
       } finally {
         isLoading = false;
@@ -93,27 +132,21 @@ function createAuth() {
     generateKeys() {
       const sk = generateSecretKey();
       const pk = getPublicKey(sk);
-      const nsec = nip19.nsecEncode(sk);
-      const npub = nip19.npubEncode(pk);
-      return { nsec, npub };
+      return { nsec: nip19.nsecEncode(sk), npub: nip19.npubEncode(pk) };
     },
 
     logout() {
-      secretKey = null;
       publicKey = null;
-      if (browser) localStorage.removeItem(KEY_STORAGE);
+      if (browser) {
+        localStorage.removeItem(NSEC_STORAGE);
+        localStorage.removeItem(EVENT_STORAGE);
+      }
     },
 
     getAuthHeader(): string | null {
-      if (!secretKey || !publicKey) return null;
-      const sk = secretKey;
-      const event = finalizeEvent({
-        kind: 27235,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [['u', endpoints.auth.me], ['method', 'GET']],
-        content: '',
-      }, sk);
-      return `Nostr ${btoa(JSON.stringify(event))}`;
+      if (!browser) return null;
+      const eventB64 = localStorage.getItem(EVENT_STORAGE);
+      return eventB64 ? `Nostr ${eventB64}` : null;
     },
   };
 }
