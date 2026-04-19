@@ -13,7 +13,7 @@ const handler: RequestHandler = async ({ params, request }) => {
   const body = request.method !== 'GET' ? await request.text() : undefined;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
     const res = await fetch(url, {

@@ -21,8 +21,10 @@
 	import AnimatedNumber from '$lib/components/animated-number.svelte';
 	import { animateIn, staggerChildren, inViewStagger, springHover, pressScale } from '$lib/motion';
 	import { browser } from '$app/environment';
+	import { Button } from '$lib/components/ui/button';
 	import AlertBanner from '$lib/components/alert-banner.svelte';
 	import type { AlertStatus } from '$lib/models/alert';
+	import { goto } from '$app/navigation';
 
 	const priceQuery = createQuery(() => ({
 		queryKey: ['price'],
@@ -55,6 +57,11 @@
 	);
 
 	let onboarded = $state(browser ? !!localStorage.getItem('magma_onboarded') : true);
+
+	function dismissOnboarding() {
+		localStorage.setItem('magma_onboarded', 'true');
+		onboarded = true;
+	}
 
 	const tools = $derived([
 		{
@@ -96,6 +103,10 @@
 							<h2 class="font-heading text-base font-semibold">{i18n.t.home.dontTrust}</h2>
 							<p class="text-sm text-muted-foreground">{i18n.t.home.welcomeDescription}</p>
 						</div>
+					</div>
+					<div class="flex gap-2 mt-3">
+						<Button size="sm" onclick={() => goto(resolve('/remittance'))}>{i18n.t.home.tools.remittance.title}</Button>
+						<Button size="sm" variant="ghost" onclick={dismissOnboarding}>{i18n.t.common.close}</Button>
 					</div>
 				</CardContent>
 			</Card>

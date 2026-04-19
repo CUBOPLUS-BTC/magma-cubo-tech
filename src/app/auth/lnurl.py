@@ -86,7 +86,6 @@ def verify_lnurl_callback(k1: str, sig: str, key: str) -> bool:
     if not is_valid:
         return False
 
-    # Create session token
     token = create_session(key)
 
     # Upsert user in database

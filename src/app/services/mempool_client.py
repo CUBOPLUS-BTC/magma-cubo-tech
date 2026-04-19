@@ -6,22 +6,24 @@ from typing import Any
 
 
 class MempoolClient:
+    # Shared cache across all instances to avoid duplicate API calls
+    _shared_cache: dict[str, tuple[Any, float]] = {}
+
     def __init__(self, base_url: str = "https://mempool.space/api"):
         self.base_url = base_url
-        self._cache: dict[str, tuple[Any, float]] = {}
 
     def _cached_get(self, key: str, url: str, ttl: int) -> Any:
         now = time.time()
-        if key in self._cache:
-            data, expiry = self._cache[key]
+        if key in self._shared_cache:
+            data, expiry = self._shared_cache[key]
             if now < expiry:
                 return data
 
         req = urllib.request.Request(url, headers={"User-Agent": "Magma/1.0"})
-        with urllib.request.urlopen(req, timeout=8) as response:
+        with urllib.request.urlopen(req, timeout=3) as response:
             data = json.loads(response.read().decode())
 
-        self._cache[key] = (data, now + ttl)
+        self._shared_cache[key] = (data, now + ttl)
         return data
 
     def get_address_info(self, address: str) -> dict:

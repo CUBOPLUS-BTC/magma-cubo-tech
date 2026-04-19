@@ -144,9 +144,13 @@
 			<p class="text-sm font-medium text-foreground">{i18n.t.remittance.resultsReady}</p>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4" use:staggerChildren={{ y: 20, staggerDelay: 0.1 }}>
-			<SavingsCard annualSavings={result.annual_savings} bestChannel={result.best_channel} />
+		{#if i18n.t.remittance.legalTender}
+			<p class="text-sm text-muted-foreground bg-muted/50 rounded-xl p-4">{i18n.t.remittance.legalTender}</p>
+		{/if}
 
+		<SavingsCard annualSavings={result.annual_savings} bestChannel={result.best_channel} />
+
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4" use:staggerChildren={{ y: 20, staggerDelay: 0.1 }}>
 			{#if result.best_time}
 				<Card>
 					<CardHeader>

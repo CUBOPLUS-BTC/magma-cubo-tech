@@ -7,6 +7,7 @@
   import { Card } from '$lib/components/ui/card';
   import Mountains from 'phosphor-svelte/lib/Mountains';
   import Geo from '$lib/components/geo.svelte';
+  import Globe from 'phosphor-svelte/lib/Globe';
   import QRCode from 'qrcode';
   import { onDestroy } from 'svelte';
 
@@ -83,7 +84,15 @@
   <meta name="description" content={i18n.t.app.description} />
 </svelte:head>
 
-<div class="flex min-h-screen bg-background">
+<div class="relative flex min-h-screen bg-background">
+  <!-- Language toggle -->
+  <button
+    onclick={() => i18n.setLocale(i18n.locale === 'en' ? 'es' : 'en')}
+    class="absolute top-4 right-4 z-10 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+  >
+    <Globe size={16} />
+    {i18n.locale === 'en' ? 'ES' : 'EN'}
+  </button>
   <div class="hidden lg:flex lg:w-1/2 lg:flex-col lg:items-center lg:justify-center lg:p-12 border-r border-border">
     <div class="space-y-6 max-w-sm mx-auto text-center">
       <Geo state="idle" class="w-40 h-40 mx-auto" />

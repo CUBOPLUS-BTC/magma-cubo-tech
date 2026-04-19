@@ -5,6 +5,8 @@
 	import { api } from '$lib/api/client';
 	import { endpoints } from '$lib/api/endpoints';
 	import { createQuery } from '@tanstack/svelte-query';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { toggleMode } from 'mode-watcher';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
@@ -19,6 +21,7 @@
 	import Sun from 'phosphor-svelte/lib/Sun';
 	import Moon from 'phosphor-svelte/lib/Moon';
 	import Globe from 'phosphor-svelte/lib/Globe';
+	import Door from 'phosphor-svelte/lib/Door';
 	import AnimatedNumber from '$lib/components/animated-number.svelte';
 	import { animateIn, staggerChildren } from '$lib/motion';
 
@@ -50,6 +53,11 @@
 			? auth.publicKey.slice(0, 2).toUpperCase()
 			: '?'
 	);
+
+	function handleLogout() {
+		auth.logout();
+		goto(resolve('/login'));
+	}
 
 	let progressPercent = $derived(
 		achievements?.next_level_xp
@@ -201,6 +209,14 @@
 					<span class="text-muted-foreground text-xs">
 						{i18n.locale === 'en' ? 'English' : 'Espa\u00f1ol'}
 					</span>
+				</button>
+
+				<button
+					onclick={handleLogout}
+					class="flex items-center gap-3 w-full rounded-xl px-3 py-3 text-sm text-red-500 hover:bg-destructive/10 transition-colors"
+				>
+					<Door size={18} />
+					{i18n.t.nav.logout}
 				</button>
 			</CardContent>
 		</Card>

@@ -1,23 +1,29 @@
+from concurrent.futures import ThreadPoolExecutor
 from ..services.mempool_client import MempoolClient
 
 _mempool = MempoolClient()
 
 
 def handle_network_status(body: dict) -> tuple[dict, int]:
-    try:
-        fees = _mempool.get_recommended_fees()
-    except Exception:
-        fees = {}
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        f_fees = executor.submit(_mempool.get_recommended_fees)
+        f_height = executor.submit(_mempool.get_block_tip_height)
+        f_mempool = executor.submit(_mempool.get_mempool_info)
 
-    try:
-        block_height = _mempool.get_block_tip_height()
-    except Exception:
-        block_height = 0
+        try:
+            fees = f_fees.result()
+        except Exception:
+            fees = {}
 
-    try:
-        mempool_info = _mempool.get_mempool_info()
-    except Exception:
-        mempool_info = {}
+        try:
+            block_height = f_height.result()
+        except Exception:
+            block_height = 0
+
+        try:
+            mempool_info = f_mempool.result()
+        except Exception:
+            mempool_info = {}
 
     return {
         "fees": fees,

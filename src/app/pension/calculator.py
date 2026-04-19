@@ -9,19 +9,16 @@ class PensionCalculator:
     def project(self, monthly_saving_usd: float, years: int) -> PensionProjection:
         total_months = years * 12
 
-        # Get current price
         try:
             current_price = self.coingecko.get_price()
         except Exception:
             current_price = 0.0
 
-        # Get historical prices (max available from CoinGecko free: ~365 days)
         try:
             historical = self.coingecko.get_historical_prices(days=365)
         except Exception:
             historical = []
 
-        # Build monthly average prices from historical data
         monthly_prices = self._extract_monthly_prices(historical)
 
         # If we don't have enough historical months, fill with average
