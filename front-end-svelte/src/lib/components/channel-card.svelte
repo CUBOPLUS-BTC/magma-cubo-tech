@@ -10,7 +10,7 @@
 
 <Card
 	class="relative {channel.is_recommended
-		? 'border-primary/50 ring-1 ring-primary/20'
+		? 'border-primary'
 		: ''}"
 >
 	<CardHeader>

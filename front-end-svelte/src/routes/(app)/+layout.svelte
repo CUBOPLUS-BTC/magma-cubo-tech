@@ -6,16 +6,13 @@
   import { i18n } from '$lib/i18n/index.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Separator } from '$lib/components/ui/separator';
-  import { toggleMode } from 'mode-watcher';
   import Flame from 'phosphor-svelte/lib/Flame';
   import Mountains from 'phosphor-svelte/lib/Mountains';
   import PaperPlaneTilt from 'phosphor-svelte/lib/PaperPlaneTilt';
   import PiggyBank from 'phosphor-svelte/lib/PiggyBank';
   import CurrencyBtc from 'phosphor-svelte/lib/CurrencyBtc';
   import Door from 'phosphor-svelte/lib/Door';
-  import Moon from 'phosphor-svelte/lib/Moon';
-  import Sun from 'phosphor-svelte/lib/Sun';
-  import Globe from 'phosphor-svelte/lib/Globe';
+  import UserCircle from 'phosphor-svelte/lib/UserCircle';
 
   let { children } = $props();
 
@@ -47,17 +44,17 @@
         <Mountains class="size-7 text-primary" weight="bold" />
         <h1 class="font-heading text-lg font-semibold text-sidebar-foreground tracking-tight">{i18n.t.app.name}</h1>
       </div>
-      <p class="text-[11px] text-sidebar-foreground/50 mt-1 px-0.5">{i18n.t.app.tagline}</p>
+      <p class="text-[11px] text-muted-foreground mt-1 px-0.5">{i18n.t.app.tagline}</p>
     </div>
 
     <nav class="flex flex-1 flex-col gap-0.5">
       {#each navItems as item (item.href)}
         <a
           href={resolve(item.href as '/home' | '/remittance' | '/pension' | '/savings')}
-          class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors
+          class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200
             {currentPath === item.href
-              ? 'bg-primary/10 text-primary font-semibold'
-              : 'text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-foreground'}"
+              ? 'bg-muted text-primary font-semibold'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'}"
         >
           <item.icon size={20} weight={currentPath === item.href ? 'fill' : 'regular'} />
           {item.label}
@@ -65,21 +62,20 @@
       {/each}
     </nav>
 
-    <Separator class="my-3 opacity-50" />
+    <Separator class="my-3" />
 
     <div class="flex flex-col gap-0.5">
-      <Button variant="ghost" size="sm" class="justify-start gap-3 rounded-xl text-sidebar-foreground/55 hover:text-sidebar-foreground" onclick={toggleMode}>
-        <Sun size={18} class="dark:hidden" />
-        <Moon size={18} class="hidden dark:block" />
-        {i18n.t.nav.theme}
-      </Button>
-      <Button variant="ghost" size="sm"
-        class="justify-start gap-3 rounded-xl text-sidebar-foreground/55 hover:text-sidebar-foreground"
-        onclick={() => i18n.setLocale(i18n.locale === 'en' ? 'es' : 'en')}>
-        <Globe size={18} />
-        {i18n.locale === 'en' ? 'ES' : 'EN'}
-      </Button>
-      <Button variant="ghost" size="sm" class="justify-start gap-3 rounded-xl text-sidebar-foreground/55 hover:text-red-500" onclick={handleLogout}>
+      <a
+        href={resolve('/profile')}
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200
+          {currentPath === '/profile'
+            ? 'bg-muted text-primary font-semibold'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'}"
+      >
+        <UserCircle size={20} weight={currentPath === '/profile' ? 'fill' : 'regular'} />
+        {i18n.t.nav.profile}
+      </a>
+      <Button variant="ghost" size="sm" class="justify-start gap-3 rounded-xl text-muted-foreground hover:text-red-500" onclick={handleLogout}>
         <Door size={18} />
         {i18n.t.nav.logout}
       </Button>
@@ -93,11 +89,11 @@
   </main>
 </div>
 
-<nav class="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-border bg-card/95 backdrop-blur-sm px-2 py-2.5 lg:hidden">
+<nav class="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-border bg-card backdrop-blur-sm px-2 py-2.5 lg:hidden">
   {#each navItems as item (item.href)}
     <a
       href={resolve(item.href as '/home' | '/remittance' | '/pension' | '/savings')}
-      class="flex flex-col items-center gap-1 px-2 py-1 text-[11px] transition-colors
+      class="flex flex-col items-center gap-1 px-3 py-1.5 text-[11px] transition-colors duration-200 rounded-xl
         {currentPath === item.href
           ? 'text-primary font-semibold'
           : 'text-muted-foreground'}"
@@ -106,4 +102,14 @@
       {item.label}
     </a>
   {/each}
+  <a
+    href={resolve('/profile')}
+    class="flex flex-col items-center gap-1 px-3 py-1.5 text-[11px] transition-colors duration-200 rounded-xl
+      {currentPath === '/profile'
+        ? 'text-primary font-semibold'
+        : 'text-muted-foreground'}"
+  >
+    <UserCircle size={22} weight={currentPath === '/profile' ? 'fill' : 'regular'} />
+    {i18n.t.nav.profile}
+  </a>
 </nav>

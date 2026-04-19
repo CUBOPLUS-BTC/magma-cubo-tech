@@ -253,13 +253,7 @@
                   </code>
                 </div>
 
-                <div class="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
-                  <svg class="size-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  <p class="text-xs text-amber-700 dark:text-amber-300">{i18n.t.login.nostrBackupWarning}</p>
-                </div>
+                <p class="text-xs text-destructive/80">{i18n.t.login.nostrBackupWarning}</p>
 
                 <Button
                   variant="outline"
@@ -300,9 +294,9 @@
                 <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z"/>
                 </svg>
-                Open in wallet
+                {i18n.t.login.openInWallet}
               </a>
-              <p class="text-xs text-muted-foreground text-center">Works with Blink, Phoenix, Zeus, and other Lightning wallets</p>
+              <p class="text-xs text-muted-foreground text-center">{i18n.t.login.walletCompatibility}</p>
             {/if}
 
             <div class="flex items-center justify-center gap-2">

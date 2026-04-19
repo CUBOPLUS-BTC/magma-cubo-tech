@@ -4,12 +4,11 @@
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { i18n } from '$lib/i18n/index.svelte';
 	import favicon from '$lib/assets/favicon.svg';
+	import { QueryClientProvider } from '@tanstack/svelte-query';
+	import { queryClient } from '$lib/api/query-client';
 
 	let { children } = $props();
 </script>
-
-<ModeWatcher defaultMode="dark" />
-<Toaster />
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
@@ -20,4 +19,8 @@
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-{@render children()}
+<ModeWatcher defaultMode="dark" />
+<Toaster />
+<QueryClientProvider client={queryClient}>
+	{@render children()}
+</QueryClientProvider>

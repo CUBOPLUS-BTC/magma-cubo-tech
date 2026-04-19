@@ -8,7 +8,7 @@
   import WarningCircle from 'phosphor-svelte/lib/WarningCircle';
 </script>
 
-<div class="flex min-h-screen items-center justify-center p-6 bg-muted/30">
+<div class="flex min-h-screen items-center justify-center p-6 bg-background">
   <Card class="w-full max-w-md p-8 text-center space-y-6">
     <div class="flex justify-center">
       <WarningCircle size={64} weight="duotone" class="text-destructive" />

@@ -17,7 +17,10 @@ function createAlerts() {
 
     async fetchStatus(): Promise<void> {
       try {
-        const res = await fetch(endpoints.alerts.status);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(endpoints.alerts.status, { signal: controller.signal });
+        clearTimeout(timeout);
         if (res.ok) {
           status = await res.json();
           failCount = 0;
@@ -33,7 +36,10 @@ function createAlerts() {
 
     async fetchAlerts(): Promise<void> {
       try {
-        const res = await fetch(endpoints.alerts.list(lastFetch));
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(endpoints.alerts.list(lastFetch), { signal: controller.signal });
+        clearTimeout(timeout);
         if (res.ok) {
           const data = await res.json();
           if (data.alerts?.length > 0) {
