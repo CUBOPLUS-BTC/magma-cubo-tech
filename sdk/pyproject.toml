@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "magma-sdk"
+version = "0.1.0"
+description = "Python client for the SatScore / Magma Bitcoin API."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Cuboplus" }]
+keywords = ["bitcoin", "lightning", "lnurl", "nostr", "remittance", "dca"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/CUBOPLUS-BTC/satscore-cubo-tech"
+Source = "https://github.com/CUBOPLUS-BTC/satscore-cubo-tech"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["magma_sdk*"]

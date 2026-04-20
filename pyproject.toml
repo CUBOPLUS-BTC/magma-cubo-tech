@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "sdk"]
 addopts = "-ra --strict-markers"
 filterwarnings = ["error::DeprecationWarning"]
