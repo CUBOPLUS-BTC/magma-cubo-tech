@@ -20,8 +20,11 @@ class Resource:
         *,
         query: Optional[Mapping[str, Any]] = None,
         auth: bool = False,
+        request_id: Optional[str] = None,
     ) -> Any:
-        return self._client._request("GET", path, query=query, auth=auth)
+        return self._client._request(
+            "GET", path, query=query, auth=auth, request_id=request_id
+        )
 
     def _post(
         self,
@@ -30,7 +33,15 @@ class Resource:
         json_body: Any = None,
         query: Optional[Mapping[str, Any]] = None,
         auth: bool = False,
+        idempotency_key: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> Any:
         return self._client._request(
-            "POST", path, json_body=json_body, query=query, auth=auth
+            "POST",
+            path,
+            json_body=json_body,
+            query=query,
+            auth=auth,
+            idempotency_key=idempotency_key,
+            request_id=request_id,
         )

@@ -13,6 +13,7 @@ Usage::
 
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 from .async_resources import (
@@ -76,6 +77,29 @@ class AsyncMagmaClient:
 
     def is_authenticated(self) -> bool:
         return self._sync.is_authenticated()
+
+    async def health(self) -> dict:
+        """GET /health (async)."""
+        return await asyncio.to_thread(self._sync.health)
+
+    async def wait_until_ready(
+        self,
+        timeout: float = 30.0,
+        *,
+        interval: float = 0.5,
+    ) -> bool:
+        """Async counterpart to :meth:`MagmaClient.wait_until_ready`."""
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + timeout
+        while True:
+            try:
+                await self.health()
+                return True
+            except Exception:
+                if loop.time() >= deadline:
+                    return False
+                remaining = max(0.0, deadline - loop.time())
+                await asyncio.sleep(min(interval, remaining))
 
     def _sync_token_from_inner(self) -> None:
         """Hook so async resources can re-read the token after auth flows.

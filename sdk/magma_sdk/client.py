@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Optional
 
-from ._transport import HTTPTransport, TransportConfig
+from ._transport import HTTPTransport, OnRetry, TransportConfig
 from .exceptions import AuthenticationError, MagmaError
 from .resources import (
     AlertsResource,
@@ -40,6 +40,8 @@ class MagmaClient:
         max_retries: int = 2,
         backoff: float = 0.25,
         user_agent: Optional[str] = None,
+        respect_retry_after: bool = True,
+        on_retry: Optional[OnRetry] = None,
         transport: Optional[HTTPTransport] = None,
     ) -> None:
         if not isinstance(base_url, str) or not base_url.startswith(("http://", "https://")):
@@ -51,6 +53,8 @@ class MagmaClient:
                 "timeout": timeout,
                 "max_retries": max_retries,
                 "backoff": backoff,
+                "respect_retry_after": respect_retry_after,
+                "on_retry": on_retry,
             }
             if user_agent:
                 cfg_kwargs["user_agent"] = user_agent
@@ -86,6 +90,44 @@ class MagmaClient:
     def is_authenticated(self) -> bool:
         return bool(self._token)
 
+    # ---- health ----
+
+    def health(self) -> dict:
+        """GET /health — liveness check."""
+        result = self._request("GET", "/health")
+        return result if isinstance(result, dict) else {"status": "ok"}
+
+    def wait_until_ready(
+        self,
+        timeout: float = 30.0,
+        *,
+        interval: float = 0.5,
+        sleep=None,
+        now=None,
+    ) -> bool:
+        """Poll ``/health`` until it returns 200 or ``timeout`` elapses.
+
+        Returns ``True`` on success, ``False`` on timeout. Handy for
+        container startup scripts and integration tests.
+        """
+        import time as _time
+
+        _sleep = sleep or _time.sleep
+        _now = now or _time.time
+
+        if timeout <= 0:
+            raise MagmaError("timeout must be positive")
+
+        deadline = _now() + timeout
+        while True:
+            try:
+                self.health()
+                return True
+            except Exception:
+                if _now() >= deadline:
+                    return False
+                _sleep(max(0.0, min(interval, deadline - _now())))
+
     # ---- internal request helper ----
 
     def _request(
@@ -96,6 +138,8 @@ class MagmaClient:
         json_body: Any = None,
         query: Optional[Mapping[str, Any]] = None,
         auth: bool = False,
+        idempotency_key: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> Any:
         token = None
         if auth:
@@ -111,4 +155,6 @@ class MagmaClient:
             json_body=json_body,
             query=query,
             token=token,
+            idempotency_key=idempotency_key,
+            request_id=request_id,
         )

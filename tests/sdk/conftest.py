@@ -50,6 +50,8 @@ class StubTransport(HTTPTransport):
         query=None,
         token: Optional[str] = None,
         extra_headers=None,
+        idempotency_key: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> Any:
         call = {
             "method": method,
@@ -57,6 +59,8 @@ class StubTransport(HTTPTransport):
             "json_body": json_body,
             "query": dict(query) if query else None,
             "token": token,
+            "idempotency_key": idempotency_key,
+            "request_id": request_id,
         }
         self.calls.append(call)
         if self._responder is None:

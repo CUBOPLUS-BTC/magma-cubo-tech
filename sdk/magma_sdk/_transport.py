@@ -3,7 +3,9 @@
 Stdlib-only (``urllib.request``) to avoid pulling in a dependency on
 ``requests``. Supports per-request timeout, bounded retries with
 exponential backoff on transient failures (connection / 5xx / 429),
-bearer-token auth, structured error decoding, and honours ``Retry-After``.
+bearer-token auth, structured error decoding, ``Retry-After``,
+``X-Request-Id`` propagation, idempotency keys, and an observable
+``on_retry`` callback.
 """
 
 from __future__ import annotations
@@ -14,17 +16,37 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, Optional
 
 from .exceptions import TransportError, api_error_for
 
 
-DEFAULT_USER_AGENT = "magma-sdk-python/0.2.0"
+DEFAULT_USER_AGENT = "magma-sdk-python/0.3.0"
 _RETRIABLE_STATUS = {408, 425, 429, 500, 502, 503, 504}
 # Upper bound enforced on any Retry-After value (seconds) so a
 # misbehaving server can't stall the client indefinitely.
 MAX_RETRY_AFTER = 60.0
+
+REQUEST_ID_HEADER = "X-Request-Id"
+IDEMPOTENCY_HEADER = "Idempotency-Key"
+
+
+@dataclass(frozen=True)
+class RetryEvent:
+    """Passed to ``on_retry`` callbacks on each retry decision."""
+
+    attempt: int
+    method: str
+    path: str
+    status: Optional[int]
+    delay: float
+    error: Optional[BaseException]
+    request_id: Optional[str]
+
+
+OnRetry = Callable[[RetryEvent], None]
 
 
 @dataclass(frozen=True)
@@ -35,6 +57,12 @@ class TransportConfig:
     backoff: float = 0.25
     user_agent: str = DEFAULT_USER_AGENT
     respect_retry_after: bool = True
+    on_retry: Optional[OnRetry] = field(default=None, compare=False)
+
+
+def generate_request_id() -> str:
+    """Return a new request id (UUID4 hex, 32 chars)."""
+    return uuid.uuid4().hex
 
 
 class HTTPTransport:
@@ -47,11 +75,13 @@ class HTTPTransport:
         opener: Optional[Callable[..., Any]] = None,
         sleep: Callable[[float], None] = time.sleep,
         now: Callable[[], float] = time.time,
+        request_id_factory: Callable[[], str] = generate_request_id,
     ) -> None:
         self._config = config
         self._opener = opener or urllib.request.urlopen
         self._sleep = sleep
         self._now = now
+        self._request_id_factory = request_id_factory
 
     @property
     def base_url(self) -> str:
@@ -66,18 +96,24 @@ class HTTPTransport:
         query: Optional[Mapping[str, Any]] = None,
         token: Optional[str] = None,
         extra_headers: Optional[Mapping[str, str]] = None,
+        idempotency_key: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> Any:
         url = self._build_url(path, query)
         data: Optional[bytes] = None
+        req_id = request_id or self._request_id_factory()
         headers = {
             "Accept": "application/json",
             "User-Agent": self._config.user_agent,
+            REQUEST_ID_HEADER: req_id,
         }
         if json_body is not None:
             data = json.dumps(json_body).encode("utf-8")
             headers["Content-Type"] = "application/json"
         if token:
             headers["Authorization"] = f"Bearer {token}"
+        if idempotency_key:
+            headers[IDEMPOTENCY_HEADER] = idempotency_key
         if extra_headers:
             headers.update(extra_headers)
 
@@ -99,7 +135,9 @@ class HTTPTransport:
                 if 200 <= status < 300:
                     return body
                 if status in _RETRIABLE_STATUS and attempt <= self._config.max_retries:
-                    self._sleep(self._compute_delay(attempt, response_headers))
+                    delay = self._compute_delay(attempt, response_headers)
+                    self._notify_retry(attempt, method, path, status, delay, None, req_id)
+                    self._sleep(delay)
                     continue
                 detail = body.get("detail") if isinstance(body, dict) else None
                 raise api_error_for(status, detail, body)
@@ -109,25 +147,24 @@ class HTTPTransport:
                 status = exc.code
                 response_headers = _headers_to_dict(getattr(exc, "headers", None))
                 if status in _RETRIABLE_STATUS and attempt <= self._config.max_retries:
-                    self._sleep(self._compute_delay(attempt, response_headers))
+                    delay = self._compute_delay(attempt, response_headers)
+                    self._notify_retry(attempt, method, path, status, delay, exc, req_id)
+                    self._sleep(delay)
                     continue
                 detail = body.get("detail") if isinstance(body, dict) else None
                 raise api_error_for(status, detail, body) from None
             except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
                 if attempt <= self._config.max_retries:
-                    self._sleep(self._compute_delay(attempt, None))
+                    delay = self._compute_delay(attempt, None)
+                    self._notify_retry(attempt, method, path, None, delay, exc, req_id)
+                    self._sleep(delay)
                     continue
                 raise TransportError(f"Request to {url} failed: {exc}") from exc
 
     def _compute_delay(
         self, attempt: int, headers: Optional[Mapping[str, str]]
     ) -> float:
-        """Return the backoff to sleep before ``attempt``'s retry.
-
-        Honours an upstream ``Retry-After`` header (seconds or HTTP-date)
-        when ``respect_retry_after`` is on; otherwise falls back to
-        exponential backoff.
-        """
+        """Return the backoff to sleep before ``attempt``'s retry."""
         retry_after = (
             _parse_retry_after(headers, self._now())
             if headers and self._config.respect_retry_after
@@ -136,6 +173,34 @@ class HTTPTransport:
         if retry_after is not None:
             return max(0.0, min(retry_after, MAX_RETRY_AFTER))
         return self._config.backoff * (2 ** (attempt - 1))
+
+    def _notify_retry(
+        self,
+        attempt: int,
+        method: str,
+        path: str,
+        status: Optional[int],
+        delay: float,
+        error: Optional[BaseException],
+        request_id: str,
+    ) -> None:
+        hook = self._config.on_retry
+        if hook is None:
+            return
+        event = RetryEvent(
+            attempt=attempt,
+            method=method,
+            path=path,
+            status=status,
+            delay=delay,
+            error=error,
+            request_id=request_id,
+        )
+        try:
+            hook(event)
+        except Exception:
+            # Observability hooks must never break the request pipeline.
+            pass
 
     def _build_url(self, path: str, query: Optional[Mapping[str, Any]]) -> str:
         base = self._config.base_url.rstrip("/")
@@ -169,11 +234,7 @@ def _headers_to_dict(headers: Any) -> Optional[dict]:
 
 
 def _parse_retry_after(headers: Mapping[str, str], now: float) -> Optional[float]:
-    """Parse ``Retry-After`` as seconds (int) or HTTP-date.
-
-    Returns seconds until the retry, or ``None`` if the header is absent
-    or cannot be parsed.
-    """
+    """Parse ``Retry-After`` as seconds (int) or HTTP-date."""
     raw = headers.get("retry-after") or headers.get("Retry-After")
     if not raw:
         return None

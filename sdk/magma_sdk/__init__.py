@@ -1,5 +1,11 @@
 """Magma SDK — Python client for the SatScore / Magma backend."""
 
+from ._transport import (
+    IDEMPOTENCY_HEADER,
+    REQUEST_ID_HEADER,
+    RetryEvent,
+    generate_request_id,
+)
 from .async_client import AsyncMagmaClient
 from .client import MagmaClient
 from .exceptions import (
@@ -25,13 +31,27 @@ from .models import (
     SendTimeRecommendation,
 )
 from .resources.auth import AuthSession, Challenge, LnurlChallenge, LnurlStatus
+from .webhooks import (
+    InvalidSignatureError,
+    MalformedWebhookError,
+    ReplayError,
+    WebhookError,
+    WebhookEvent,
+    WebhookVerifier,
+    sign as sign_webhook,
+)
 
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "MagmaClient",
     "AsyncMagmaClient",
+    # Transport
+    "RetryEvent",
+    "REQUEST_ID_HEADER",
+    "IDEMPOTENCY_HEADER",
+    "generate_request_id",
     # Errors
     "MagmaError",
     "TransportError",
@@ -56,4 +76,12 @@ __all__ = [
     "Challenge",
     "LnurlChallenge",
     "LnurlStatus",
+    # Webhooks
+    "WebhookVerifier",
+    "WebhookEvent",
+    "WebhookError",
+    "InvalidSignatureError",
+    "ReplayError",
+    "MalformedWebhookError",
+    "sign_webhook",
 ]

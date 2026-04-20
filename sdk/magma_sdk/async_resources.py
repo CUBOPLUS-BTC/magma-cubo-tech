@@ -12,7 +12,7 @@ true non-blocking throughput at scale, swap in ``httpx.AsyncClient``.
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from .models import (
     Alert,
@@ -117,6 +117,49 @@ class AsyncAlertsResource(_AsyncBase):
 
     async def status(self) -> dict:
         return await asyncio.to_thread(self._sync().alerts.status)
+
+    async def stream(
+        self,
+        *,
+        since: Optional[int] = None,
+        poll_interval: float = 5.0,
+        limit: int = 50,
+        max_iterations: Optional[int] = None,
+    ):
+        """Async generator yielding alerts as the monitor surfaces them.
+
+        Parameters mirror :meth:`AlertsResource.iter_new`, but the loop
+        sleeps via :func:`asyncio.sleep` so the event loop keeps running.
+        """
+        if poll_interval < 0:
+            raise ValueError("poll_interval must be >= 0")
+
+        cursor = since
+        seen: set = set()
+        iteration = 0
+
+        from .resources.alerts import _alert_key  # local import to avoid cycles
+
+        while True:
+            iteration += 1
+            alerts = await self.list(limit=limit)
+            alerts.sort(key=lambda a: (a.created_at or 0))
+            for alert in alerts:
+                ts = alert.created_at
+                key = _alert_key(alert)
+                if cursor is not None and ts is not None and ts <= cursor:
+                    continue
+                if key in seen:
+                    continue
+                seen.add(key)
+                yield alert
+                if ts is not None:
+                    cursor = ts if cursor is None else max(cursor, ts)
+
+            if max_iterations is not None and iteration >= max_iterations:
+                return
+            if poll_interval > 0:
+                await asyncio.sleep(poll_interval)
 
 
 class AsyncGamificationResource(_AsyncBase):

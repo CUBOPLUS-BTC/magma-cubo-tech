@@ -137,9 +137,118 @@ Authenticated commands (`savings-progress`) use `MAGMA_TOKEN` or
 `--token`. Exit codes: `0` success, `1` usage/validation, `2` API
 error, `3` transport error.
 
+## Webhook verification
+
+When Magma sends signed webhooks, verify them with
+`WebhookVerifier`. It checks the HMAC-SHA256 of
+`"<timestamp>.<body>"` and rejects replays older than `tolerance_seconds`.
+
+```python
+from magma_sdk import WebhookVerifier, InvalidSignatureError, ReplayError
+
+verifier = WebhookVerifier(secret="shhh", tolerance_seconds=300)
+
+try:
+    event = verifier.verify_request(body=request.body, headers=request.headers)
+except (InvalidSignatureError, ReplayError):
+    return 400
+
+assert event.type == "alert.fee_low"
+handle(event.data)
+```
+
+Producers (or your tests) can mint the headers with `sign_webhook`:
+
+```python
+from magma_sdk import sign_webhook
+headers = sign_webhook(body, secret="shhh")
+# headers = {"X-Magma-Signature": "...", "X-Magma-Timestamp": "..."}
+```
+
+## Idempotency keys
+
+Pass `idempotency_key` to any mutation and the SDK adds an
+`Idempotency-Key` header. Useful for retrying network-interrupted
+deposits without risking a double-write.
+
+```python
+import uuid
+key = str(uuid.uuid4())
+client.savings.record_deposit(50, idempotency_key=key)
+client.savings.create_goal(monthly_target_usd=100, idempotency_key=key)
+```
+
+## Request IDs and retry observability
+
+Every outbound request carries an `X-Request-Id` header. Pass your own
+via `request_id=...` to correlate with your traces. You can also subscribe
+to retry events:
+
+```python
+from magma_sdk import MagmaClient, RetryEvent
+
+def log_retry(event: RetryEvent):
+    print(
+        f"retry {event.method} {event.path} attempt={event.attempt} "
+        f"status={event.status} delay={event.delay:.2f}s rid={event.request_id}"
+    )
+
+client = MagmaClient("https://api.magma.example", on_retry=log_retry)
+```
+
+The callback receives a :class:`RetryEvent` and never breaks the request
+pipeline even if it raises.
+
+## Alert iterators
+
+Consume alerts as they arrive without reinventing a polling loop:
+
+```python
+# Sync
+for alert in client.alerts.iter_new(since=last_seen_ts, poll_interval=5.0):
+    handle(alert)
+
+# Async
+async for alert in async_client.alerts.stream(since=last_seen_ts, poll_interval=5.0):
+    await handle(alert)
+```
+
+Deduplication is automatic across polls; pass `max_iterations` or a
+`stop=callable` to bound the loop (tests love `max_iterations=1`).
+
+## Health checks
+
+```python
+if client.wait_until_ready(timeout=30):
+    ...
+# Async
+await async_client.wait_until_ready(timeout=30)
+```
+
+## Testing your code against the SDK
+
+`magma_sdk.testing` exposes a `MockTransport` so consumers can unit-test
+code that takes a `MagmaClient` without mocking HTTP by hand:
+
+```python
+from magma_sdk.testing import MockTransport, make_test_client
+
+mock = MockTransport()
+mock.on("GET", "/price", {"price_usd": 70000, "sources_count": 2, "deviation": 0, "has_warning": False})
+client = make_test_client(transport=mock)
+
+assert my_function(client) == 70000
+assert mock.find("GET", "/price") is not None
+```
+
+Other helpers: `mock.enqueue(...)` for a FIFO of responses,
+`mock.enqueue_error(exc)` to simulate failures, `mock.set_default(...)`
+as a catch-all, `mock.find_all(...)` / `mock.reset()` for assertions.
+
 ## Status
 
-`v0.2`: covers public endpoints, session management, sync + async
-clients, `Retry-After`, and a stdlib-only CLI. Pagination helpers and
-a native async transport (for truly non-blocking I/O) are tracked for
-a future release.
+`v0.3`: webhooks, idempotency keys, request IDs, retry hook, alert
+iterators (sync + async), health/readiness, consumer testing helpers,
+sync + async clients, `Retry-After`, and a stdlib-only CLI. A native
+async transport (for truly non-blocking I/O) and server-driven
+pagination are tracked for a future release.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Optional
 
 from ..exceptions import MagmaError
 from ..models import SavingsProgress, SavingsProjection
@@ -37,9 +38,18 @@ class SavingsResource(Resource):
         return SavingsProjection.from_dict(data if isinstance(data, dict) else {})
 
     def create_goal(
-        self, monthly_target_usd: float, target_years: int = 10
+        self,
+        monthly_target_usd: float,
+        target_years: int = 10,
+        *,
+        idempotency_key: Optional[str] = None,
     ) -> dict:
-        """POST /savings/goal — create or update the user's savings goal."""
+        """POST /savings/goal — create or update the user's savings goal.
+
+        Pass ``idempotency_key`` to make the request safe to retry; servers
+        that honour the ``Idempotency-Key`` header will collapse duplicate
+        submissions.
+        """
         _validate_monthly(monthly_target_usd)
         _validate_years(target_years)
         return self._post(
@@ -49,10 +59,17 @@ class SavingsResource(Resource):
                 "target_years": target_years,
             },
             auth=True,
+            idempotency_key=idempotency_key,
         )
 
-    def record_deposit(self, amount_usd: float) -> dict:
-        """POST /savings/deposit — record a new deposit."""
+    def record_deposit(
+        self, amount_usd: float, *, idempotency_key: Optional[str] = None
+    ) -> dict:
+        """POST /savings/deposit — record a new deposit.
+
+        Pass ``idempotency_key`` (any unique string) to deduplicate retried
+        writes. A UUID4 per user-level deposit is a good default.
+        """
         if not isinstance(amount_usd, (int, float)) or isinstance(amount_usd, bool):
             raise MagmaError("amount_usd must be a number")
         if not math.isfinite(amount_usd):
@@ -63,6 +80,7 @@ class SavingsResource(Resource):
             "/savings/deposit",
             json_body={"amount_usd": amount_usd},
             auth=True,
+            idempotency_key=idempotency_key,
         )
 
     def progress(self) -> SavingsProgress:
