@@ -10,6 +10,8 @@
   import { formatUSD } from '$lib/utils/formatters';
   import type { VerifiedPrice } from '$lib/models/price';
   import type { NetworkStatus } from '$lib/models/network';
+  import type { RemittanceResult } from '$lib/models/remittance';
+  import type { PensionProjection } from '$lib/models/pension';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
   import { Input } from '$lib/components/ui/input';
@@ -46,22 +48,44 @@
     refetchInterval: 60_000,
   }));
 
+  // Live remittance comparison for the interactive section
+  let sendAmount = $state(200);
+
+  const remittanceQuery = createQuery(() => ({
+    queryKey: ['landing-remittance', sendAmount] as const,
+    queryFn: () => api.post<RemittanceResult>(endpoints.remittance.compare, { amount_usd: sendAmount, frequency: 'monthly' }),
+  }));
+
+  // Live pension projection for DCA mockup
+  const pensionQuery = createQuery(() => ({
+    queryKey: ['landing-pension'] as const,
+    queryFn: () => api.post<PensionProjection>(endpoints.pension.projection, { monthly_saving_usd: 10, years: 4 }),
+  }));
+
   let price = $derived(priceQuery.data ?? null);
   let network = $derived(networkQuery.data ?? null);
+  let remittance = $derived(remittanceQuery.data ?? null);
+  let pension = $derived(pensionQuery.data ?? null);
   const t = $derived(i18n.t.landing);
 
-  // Interactive comparison
-  let sendAmount = $state(200);
-  let traditionalFee = $derived(sendAmount * 0.062);
-  let lightningFee = $derived(Math.max(sendAmount * 0.0003, 0.01));
+  // Derive comparison data from live API
+  let worstChannel = $derived(remittance?.channels?.reduce((worst, ch) => ch.fee_usd > worst.fee_usd ? ch : worst, remittance.channels[0]) ?? null);
+  let bestChannel = $derived(remittance?.channels?.reduce((best, ch) => ch.fee_usd < best.fee_usd ? ch : best, remittance.channels[0]) ?? null);
+  let traditionalFee = $derived(worstChannel?.fee_usd ?? 0);
+  let lightningFee = $derived(bestChannel?.fee_usd ?? 0);
   let saved = $derived(traditionalFee - lightningFee);
   let annualSaved = $derived(saved * 12);
+  let traditionalTime = $derived(worstChannel?.estimated_time ?? '1–3 days');
+  let lightningTime = $derived(bestChannel?.estimated_time ?? 'Seconds');
+  let worstName = $derived(worstChannel?.name ?? 'Traditional');
+  let bestName = $derived(bestChannel?.name ?? 'Lightning');
 
-  // Savings example: $10/month for 4 years at ~average BTC growth
+  // DCA data from live pension API
   let dcaMonthly = 10;
   let dcaYears = 4;
-  let dcaInvested = $derived(dcaMonthly * 12 * dcaYears);
-  let dcaCurrentValue = $derived(dcaInvested * 2.8); // conservative historical multiplier
+  let dcaInvested = $derived(pension?.total_invested_usd ?? dcaMonthly * 12 * dcaYears);
+  let dcaCurrentValue = $derived(pension?.current_value_usd ?? 0);
+  let dcaMultiplier = $derived(dcaInvested > 0 ? dcaCurrentValue / dcaInvested : 0);
 
   const wallets = ['Blink', 'Strike', 'Phoenix', 'Wallet of Satoshi', 'Muun', 'Zeus', 'Breez'];
 </script>
@@ -217,11 +241,11 @@
           <thead>
             <tr class="border-b border-border bg-muted/50">
               <th class="text-left font-medium text-muted-foreground px-4 py-2.5"></th>
-              <th class="text-right font-medium text-muted-foreground px-4 py-2.5">{t.comparison.traditional}</th>
+              <th class="text-right font-medium text-muted-foreground px-4 py-2.5">{worstName}</th>
               <th class="text-right font-medium px-4 py-2.5">
                 <span class="inline-flex items-center gap-1 text-foreground">
                   <Lightning size={14} weight="fill" class="text-primary" />
-                  {t.comparison.lightning}
+                  {bestName}
                 </span>
               </th>
             </tr>
@@ -239,8 +263,8 @@
             </tr>
             <tr>
               <td class="px-4 py-3 text-muted-foreground">{t.comparison.time}</td>
-              <td class="px-4 py-3 text-right text-muted-foreground">{t.comparison.traditionalTime}</td>
-              <td class="px-4 py-3 text-right font-medium">{t.comparison.lightningTime}</td>
+              <td class="px-4 py-3 text-right text-muted-foreground">{traditionalTime}</td>
+              <td class="px-4 py-3 text-right font-medium">{lightningTime}</td>
             </tr>
           </tbody>
         </table>
@@ -283,12 +307,12 @@
                   <div class="h-px bg-border"></div>
                   <div class="flex justify-between items-center">
                     <span class="text-[11px] text-muted-foreground">{i18n.t.savings.currentValue}</span>
-                    <span class="text-[13px] font-bold tabular-nums text-green-500">${dcaCurrentValue.toLocaleString()}</span>
+                    <span class="text-[13px] font-bold tabular-nums text-green-500">{dcaCurrentValue > 0 ? `$${dcaCurrentValue.toLocaleString()}` : '...'}</span>
                   </div>
                   <div class="h-px bg-border"></div>
                   <div class="flex justify-between items-center">
                     <span class="text-[11px] text-muted-foreground">{i18n.t.savings.multiplier}</span>
-                    <span class="text-[13px] font-bold tabular-nums">2.8×</span>
+                    <span class="text-[13px] font-bold tabular-nums">{dcaMultiplier > 0 ? `${dcaMultiplier.toFixed(1)}×` : '...'}</span>
                   </div>
                 </div>
                 <!-- Mini bar chart mockup -->
