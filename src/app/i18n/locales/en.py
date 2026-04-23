@@ -29,6 +29,10 @@ TRANSLATIONS: dict = {
     "auth.lnurl.challenge.invalid": "LNURL authentication challenge is invalid.",
     "auth.lnurl.signature.invalid": "LNURL signature verification failed.",
     "auth.permission.denied":       "You do not have permission to perform this action.",
+    "auth.phone.invalid":           "Invalid phone number. Use Salvadoran format (+503 XXXX-XXXX).",
+    "auth.phone.code.sent":         "Code sent via SMS.",
+    "auth.phone.code.invalid":      "Wrong code. Please try again.",
+    "auth.phone.code.expired":      "Code has expired. Request a new one.",
 
     # -----------------------------------------------------------------------
     # Savings
@@ -286,4 +290,222 @@ TRANSLATIONS: dict = {
     "general.just_now":             "Just now",
     "general.unknown":              "Unknown",
     "general.n_a":                  "N/A",
+
+    # -----------------------------------------------------------------------
+    # Scoring
+    # -----------------------------------------------------------------------
+    "scoring.address.required":     "address is required",
+    "scoring.address.invalid":      "Invalid Bitcoin address format: {address}",
+    "scoring.analysis.failed":      "Analysis failed: {error}",
+    "scoring.address_query.required": "address query parameter is required",
+
+    # -----------------------------------------------------------------------
+    # Preferences
+    # -----------------------------------------------------------------------
+    "preferences.auth.required":    "Authentication required",
+    "preferences.load.failed":      "Could not load preferences: {error}",
+    "preferences.body.empty":       "Request body must not be empty",
+    "preferences.fields.invalid":   "No valid fields provided. Accepted: fee_alert_low, fee_alert_high, alerts_enabled",
+    "preferences.update.failed":    "Could not update preferences: {error}",
+    "preferences.price_usd.required": "price_usd is required",
+    "preferences.price_usd.invalid": "price_usd must be a number",
+    "preferences.direction.required": "direction is required",
+    "preferences.alert.created":    "Price alert created",
+    "preferences.alert.add_failed": "Could not add alert: {error}",
+    "preferences.alert_id.required": "alert_id is required",
+    "preferences.alert.removed":    "Price alert removed",
+    "preferences.alert.remove_failed": "Could not remove alert: {error}",
+
+    # -----------------------------------------------------------------------
+    # Lightning
+    # -----------------------------------------------------------------------
+    "lightning.overview.failed":    "Could not fetch Lightning overview: {error}",
+    "lightning.compare.failed":     "Could not generate comparison: {error}",
+    "lightning.amount.required":    "amount_usd is required (body or query parameter)",
+    "lightning.amount.invalid":     "amount_usd must be a number",
+    "lightning.amount.positive":    "amount_usd must be positive",
+    "lightning.urgency.invalid":    "urgency must be one of: low, medium, high, instant",
+    "lightning.recommend.failed":   "Recommendation failed: {error}",
+
+    # -----------------------------------------------------------------------
+    # Webhooks
+    # -----------------------------------------------------------------------
+    "webhooks.auth.required":       "Authentication required",
+    "webhooks.url.required":        "url is required",
+    "webhooks.events.required":     "events must be a non-empty list",
+    "webhooks.events.unsupported":  "Unsupported event type(s): {events}",
+    "webhooks.subscribe.failed":    "Failed to create subscription: {error}",
+    "webhooks.subscribe.success":   "Subscription created. Store the secret — it will not be shown again.",
+    "webhooks.sub_id.required":     "subscription_id is required",
+    "webhooks.unsubscribe.failed":  "Failed to remove subscription: {error}",
+    "webhooks.unsubscribe.not_found": "Subscription not found",
+    "webhooks.unsubscribe.success": "Subscription deleted",
+    "webhooks.list.failed":         "Failed to list subscriptions: {error}",
+    "webhooks.update.fields":       "No valid fields to update (url, events, active)",
+    "webhooks.update.not_found":    "Subscription not found",
+    "webhooks.update.failed":       "Update failed: {error}",
+    "webhooks.test.success":        "Test webhook delivered successfully.",
+    "webhooks.test.failed":         "Test webhook delivery failed.",
+    "webhooks.test.hint":           "Check that the URL is reachable and returns a 2xx status.",
+
+    # -----------------------------------------------------------------------
+    # Market
+    # -----------------------------------------------------------------------
+    "market.days.range":            "days must be between 1 and 365",
+    "market.interval.invalid":      "interval must be 'daily' or 'hourly'",
+    "market.prices.minimum":        "Need at least 20 price points",
+    "market.signal_type.required":  "signal_type required for backtest mode",
+    "market.mode.invalid":          "mode must be 'summary', 'score', or 'backtest'",
+    "market.no_price_data":         "No price data available",
+
+    # -----------------------------------------------------------------------
+    # Portfolio
+    # -----------------------------------------------------------------------
+    "portfolio.amount.positive":    "amount must be positive",
+    "portfolio.price.positive":     "price_usd must be positive",
+    "portfolio.tx_type.invalid":    "invalid tx_type",
+    "portfolio.period.invalid":     "period must be 'day', 'week', 'month', 'year', or 'all'",
+    "portfolio.assets.required":    "assets list required",
+    "portfolio.assets.mismatch":    "assets and expected_returns must have same length",
+    "portfolio.method.invalid":     "method must be 'basic', 'min_variance', 'max_sharpe', or 'risk_parity'",
+    "portfolio.no_holdings":        "No holdings found",
+    "portfolio.risk_note":          "Stress test results show estimated portfolio impact under each predefined market scenario.",
+    "portfolio.cost_method.invalid": "method must be 'fifo', 'lifo', or 'average'",
+    "portfolio.target.required":    "target_allocation required",
+
+    # -----------------------------------------------------------------------
+    # Simulation
+    # -----------------------------------------------------------------------
+    "simulation.initial.nonneg":    "initial must be non-negative",
+    "simulation.monthly.nonneg":    "monthly_contribution must be non-negative",
+    "simulation.years.range":       "years must be between 1 and 50",
+    "simulation.amount.positive":   "amount must be positive",
+    "simulation.frequency.invalid": "frequency must be 'daily', 'weekly', or 'monthly'",
+    "simulation.years.range_30":    "years must be between 1 and 30",
+    "simulation.prices.required":   "prices list is required",
+    "simulation.prices.minimum":    "Need at least 20 price data points",
+    "simulation.strategy.unknown":  "Unknown strategy: {name}",
+    "simulation.scenario.required": "scenario name or custom_scenario required for single mode",
+    "simulation.mode.invalid":      "mode must be 'single', 'stress_test', or 'list'",
+    "simulation.price.positive":    "current_price must be positive",
+    "simulation.volatility.range":  "volatility must be between 0 and 5",
+    "simulation.days.range":        "days must be between 1 and 3650",
+    "simulation.age.invalid":       "current_age must be less than retirement_age",
+    "simulation.retire.invalid":    "retirement_age must be less than life_expectancy",
+    "simulation.portfolio.positive": "portfolio_value must be positive",
+    "simulation.withdrawals.positive": "monthly_withdrawals must be positive",
+
+    # -----------------------------------------------------------------------
+    # Stats
+    # -----------------------------------------------------------------------
+    "stats.data.required":          "Missing required field: data",
+    "stats.data.list":              "Field 'data' must be a list of numbers.",
+    "stats.data.empty":             "Field 'data' must not be empty.",
+    "stats.data.too_large":         "data exceeds maximum of {max} points.",
+    "stats.data.non_numeric":       "data contains non-numeric values: {error}",
+    "stats.include.list":           "Field 'include' must be a list of strings.",
+    "stats.x.required":             "Missing required field: x",
+    "stats.y.required":             "Missing required field: y",
+    "stats.xy.list":                "Fields 'x' and 'y' must be lists.",
+    "stats.xy.length":              "x (len={x_len}) and y (len={y_len}) must have equal length.",
+    "stats.xy.minimum_2":           "At least 2 data points are required for correlation.",
+    "stats.xy.minimum_3":           "At least 3 data points are required for regression.",
+    "stats.xy.too_large":           "Data exceeds {max} points.",
+    "stats.xy.non_numeric":         "Non-numeric values: {error}",
+    "stats.methods.list":           "Field 'methods' must be a list.",
+    "stats.regression.type_invalid": "Invalid type. Use 'linear', 'log_linear', or 'power_law'.",
+    "stats.regression.failed":      "Regression failed: {error}",
+
+    # -----------------------------------------------------------------------
+    # Liquid
+    # -----------------------------------------------------------------------
+    "liquid.overview.failed":       "Could not fetch Liquid overview: {error}",
+    "liquid.assets.failed":         "Could not fetch Liquid assets: {error}",
+    "liquid.compare.failed":        "Could not generate comparison: {error}",
+    "liquid.peg.failed":            "Could not fetch peg info: {error}",
+    "liquid.amount.required":       "amount_usd is required",
+    "liquid.amount.invalid":        "amount_usd must be a number",
+    "liquid.amount.positive":       "amount_usd must be positive",
+    "liquid.urgency.invalid":       "urgency must be one of: low, medium, high, instant",
+    "liquid.privacy.invalid":       "privacy must be one of: normal, high, confidential",
+    "liquid.recommend.failed":      "Recommendation failed: {error}",
+
+    # -----------------------------------------------------------------------
+    # Recipients
+    # -----------------------------------------------------------------------
+    "recipients.auth.required":     "Authentication required",
+    "recipients.body.invalid":      "Invalid body",
+    "recipients.created":           "Recipient created",
+    "recipients.create.failed":     "Error creating recipient: {error}",
+    "recipients.list.failed":       "Could not list recipients: {error}",
+    "recipients.get.failed":        "Error fetching recipient: {error}",
+    "recipients.body.empty":        "Empty body",
+    "recipients.updated":           "Recipient updated",
+    "recipients.update.failed":     "Error updating: {error}",
+    "recipients.not_found":         "Recipient not found",
+    "recipients.deleted":           "Recipient deleted",
+    "recipients.delete.failed":     "Error deleting: {error}",
+
+    # -----------------------------------------------------------------------
+    # Reminders
+    # -----------------------------------------------------------------------
+    "reminders.auth.required":      "Authentication required",
+    "reminders.body.invalid":       "Invalid body",
+    "reminders.recipient_id.required": "recipient_id required (integer)",
+    "reminders.created":            "Reminder created",
+    "reminders.create.failed":      "Error creating reminder: {error}",
+    "reminders.list.failed":        "Error listing reminders: {error}",
+    "reminders.body.empty":         "Empty body",
+    "reminders.updated":            "Reminder updated",
+    "reminders.not_found":          "Reminder not found",
+    "reminders.deleted":            "Reminder deleted",
+
+    # -----------------------------------------------------------------------
+    # Sends
+    # -----------------------------------------------------------------------
+    "sends.auth.required":          "Authentication required",
+    "sends.body.invalid":           "Invalid body",
+    "sends.recipient_id.required":  "recipient_id required (integer)",
+    "sends.amount.required":        "amount_usd required (numeric)",
+    "sends.invoice.failed":         "Error generating invoice: {error}",
+
+    # -----------------------------------------------------------------------
+    # Splits (non-custodial remittance router)
+    # -----------------------------------------------------------------------
+    "splits.label.required":        "label is required",
+    "splits.profile.not_found":     "Split profile not found",
+    "splits.rules.required":        "A list of rules is required",
+    "splits.profile_id.required":   "profile_id required (integer)",
+    "splits.amount.required":       "amount_usd required (numeric)",
+    "splits.build.failed":          "Error building split: {error}",
+
+    # -----------------------------------------------------------------------
+    # Admin (extra)
+    # -----------------------------------------------------------------------
+    "admin.target.required":        "target_pubkey is required",
+    "admin.user.not_found":         "User not found",
+    "admin.token.required":         "token is required for action=revoke",
+    "admin.action.unknown":         "Unknown action: {action}",
+    "admin.key.required":           "key is required for action=set",
+    "admin.delete.confirm":         "Set confirm='DELETE' to confirm irreversible deletion",
+
+    # -----------------------------------------------------------------------
+    # Export (extra)
+    # -----------------------------------------------------------------------
+    "export.pubkey.invalid":        "Invalid pubkey",
+    "export.dates.integer":         "date_from and date_to must be integers",
+    "export.year_month.integer":    "year and month must be integers",
+    "export.month.range":           "month must be between 1 and 12",
+    "export.year.range":            "year out of valid range",
+    "export.amount.number":         "amount_usd must be a number",
+    "export.amount.positive":       "amount_usd must be positive",
+    "export.numeric.invalid":       "Invalid numeric parameter",
+    "export.monthly.positive":      "monthly_usd must be positive",
+    "export.years.range":           "years must be between 1 and 50",
+    "export.report_type.unknown":   "Unknown report_type '{type}'. Valid values: savings, statement, remittance, pension",
+
+    # -----------------------------------------------------------------------
+    # Locale validation
+    # -----------------------------------------------------------------------
+    "locale.invalid":               "Invalid locale. Use 'en' or 'es'.",
 }

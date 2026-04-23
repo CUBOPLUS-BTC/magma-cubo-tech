@@ -29,6 +29,10 @@ TRANSLATIONS: dict = {
     "auth.lnurl.challenge.invalid": "El desafío de autenticación LNURL es inválido.",
     "auth.lnurl.signature.invalid": "La verificación de firma LNURL falló.",
     "auth.permission.denied":       "No tiene permiso para realizar esta acción.",
+    "auth.phone.invalid":           "Número de teléfono inválido. Use formato salvadoreño (+503 XXXX-XXXX).",
+    "auth.phone.code.sent":         "Código enviado por SMS.",
+    "auth.phone.code.invalid":      "Código incorrecto. Intente de nuevo.",
+    "auth.phone.code.expired":      "El código ha expirado. Solicite uno nuevo.",
 
     # -----------------------------------------------------------------------
     # Savings
@@ -286,4 +290,222 @@ TRANSLATIONS: dict = {
     "general.just_now":             "Justo ahora",
     "general.unknown":              "Desconocido",
     "general.n_a":                  "N/D",
+
+    # -----------------------------------------------------------------------
+    # Scoring
+    # -----------------------------------------------------------------------
+    "scoring.address.required":     "Se requiere una dirección",
+    "scoring.address.invalid":      "Formato de dirección Bitcoin inválido: {address}",
+    "scoring.analysis.failed":      "Error en el análisis: {error}",
+    "scoring.address_query.required": "Se requiere el parámetro de consulta address",
+
+    # -----------------------------------------------------------------------
+    # Preferences
+    # -----------------------------------------------------------------------
+    "preferences.auth.required":    "Se requiere autenticación",
+    "preferences.load.failed":      "No se pudieron cargar las preferencias: {error}",
+    "preferences.body.empty":       "El cuerpo de la solicitud no puede estar vacío",
+    "preferences.fields.invalid":   "No se proporcionaron campos válidos. Aceptados: fee_alert_low, fee_alert_high, alerts_enabled",
+    "preferences.update.failed":    "No se pudieron actualizar las preferencias: {error}",
+    "preferences.price_usd.required": "Se requiere price_usd",
+    "preferences.price_usd.invalid": "price_usd debe ser un número",
+    "preferences.direction.required": "Se requiere direction",
+    "preferences.alert.created":    "Alerta de precio creada",
+    "preferences.alert.add_failed": "No se pudo agregar la alerta: {error}",
+    "preferences.alert_id.required": "Se requiere alert_id",
+    "preferences.alert.removed":    "Alerta de precio eliminada",
+    "preferences.alert.remove_failed": "No se pudo eliminar la alerta: {error}",
+
+    # -----------------------------------------------------------------------
+    # Lightning
+    # -----------------------------------------------------------------------
+    "lightning.overview.failed":    "No se pudo obtener resumen de Lightning: {error}",
+    "lightning.compare.failed":     "No se pudo generar la comparación: {error}",
+    "lightning.amount.required":    "Se requiere amount_usd (cuerpo o parámetro de consulta)",
+    "lightning.amount.invalid":     "amount_usd debe ser un número",
+    "lightning.amount.positive":    "amount_usd debe ser positivo",
+    "lightning.urgency.invalid":    "urgency debe ser uno de: low, medium, high, instant",
+    "lightning.recommend.failed":   "Error en la recomendación: {error}",
+
+    # -----------------------------------------------------------------------
+    # Webhooks
+    # -----------------------------------------------------------------------
+    "webhooks.auth.required":       "Se requiere autenticación",
+    "webhooks.url.required":        "Se requiere url",
+    "webhooks.events.required":     "events debe ser una lista no vacía",
+    "webhooks.events.unsupported":  "Tipo(s) de evento no soportado(s): {events}",
+    "webhooks.subscribe.failed":    "Error al crear suscripción: {error}",
+    "webhooks.subscribe.success":   "Suscripción creada. Guarde el secreto — no se mostrará de nuevo.",
+    "webhooks.sub_id.required":     "Se requiere subscription_id",
+    "webhooks.unsubscribe.failed":  "Error al eliminar suscripción: {error}",
+    "webhooks.unsubscribe.not_found": "Suscripción no encontrada",
+    "webhooks.unsubscribe.success": "Suscripción eliminada",
+    "webhooks.list.failed":         "Error al listar suscripciones: {error}",
+    "webhooks.update.fields":       "No hay campos válidos para actualizar (url, events, active)",
+    "webhooks.update.not_found":    "Suscripción no encontrada",
+    "webhooks.update.failed":       "Error en la actualización: {error}",
+    "webhooks.test.success":        "Webhook de prueba enviado exitosamente.",
+    "webhooks.test.failed":         "Error en el envío del webhook de prueba.",
+    "webhooks.test.hint":           "Verifique que la URL sea accesible y retorne un estado 2xx.",
+
+    # -----------------------------------------------------------------------
+    # Market
+    # -----------------------------------------------------------------------
+    "market.days.range":            "days debe estar entre 1 y 365",
+    "market.interval.invalid":      "interval debe ser 'daily' o 'hourly'",
+    "market.prices.minimum":        "Se necesitan al menos 20 puntos de precio",
+    "market.signal_type.required":  "Se requiere signal_type para el modo backtest",
+    "market.mode.invalid":          "mode debe ser 'summary', 'score' o 'backtest'",
+    "market.no_price_data":         "No hay datos de precio disponibles",
+
+    # -----------------------------------------------------------------------
+    # Portfolio
+    # -----------------------------------------------------------------------
+    "portfolio.amount.positive":    "amount debe ser positivo",
+    "portfolio.price.positive":     "price_usd debe ser positivo",
+    "portfolio.tx_type.invalid":    "tx_type inválido",
+    "portfolio.period.invalid":     "period debe ser 'day', 'week', 'month', 'year' o 'all'",
+    "portfolio.assets.required":    "Se requiere la lista de assets",
+    "portfolio.assets.mismatch":    "assets y expected_returns deben tener la misma longitud",
+    "portfolio.method.invalid":     "method debe ser 'basic', 'min_variance', 'max_sharpe' o 'risk_parity'",
+    "portfolio.no_holdings":        "No se encontraron tenencias",
+    "portfolio.risk_note":          "Los resultados del stress test muestran el impacto estimado del portafolio bajo cada escenario de mercado predefinido.",
+    "portfolio.cost_method.invalid": "method debe ser 'fifo', 'lifo' o 'average'",
+    "portfolio.target.required":    "Se requiere target_allocation",
+
+    # -----------------------------------------------------------------------
+    # Simulation
+    # -----------------------------------------------------------------------
+    "simulation.initial.nonneg":    "initial debe ser no negativo",
+    "simulation.monthly.nonneg":    "monthly_contribution debe ser no negativo",
+    "simulation.years.range":       "years debe estar entre 1 y 50",
+    "simulation.amount.positive":   "amount debe ser positivo",
+    "simulation.frequency.invalid": "frequency debe ser 'daily', 'weekly' o 'monthly'",
+    "simulation.years.range_30":    "years debe estar entre 1 y 30",
+    "simulation.prices.required":   "Se requiere la lista de prices",
+    "simulation.prices.minimum":    "Se necesitan al menos 20 puntos de precio",
+    "simulation.strategy.unknown":  "Estrategia desconocida: {name}",
+    "simulation.scenario.required": "Se requiere scenario o custom_scenario para modo single",
+    "simulation.mode.invalid":      "mode debe ser 'single', 'stress_test' o 'list'",
+    "simulation.price.positive":    "current_price debe ser positivo",
+    "simulation.volatility.range":  "volatility debe estar entre 0 y 5",
+    "simulation.days.range":        "days debe estar entre 1 y 3650",
+    "simulation.age.invalid":       "current_age debe ser menor que retirement_age",
+    "simulation.retire.invalid":    "retirement_age debe ser menor que life_expectancy",
+    "simulation.portfolio.positive": "portfolio_value debe ser positivo",
+    "simulation.withdrawals.positive": "monthly_withdrawals debe ser positivo",
+
+    # -----------------------------------------------------------------------
+    # Stats
+    # -----------------------------------------------------------------------
+    "stats.data.required":          "Campo requerido faltante: data",
+    "stats.data.list":              "El campo 'data' debe ser una lista de números.",
+    "stats.data.empty":             "El campo 'data' no puede estar vacío.",
+    "stats.data.too_large":         "data supera el máximo de {max} puntos.",
+    "stats.data.non_numeric":       "data contiene valores no numéricos: {error}",
+    "stats.include.list":           "El campo 'include' debe ser una lista de cadenas.",
+    "stats.x.required":             "Campo requerido faltante: x",
+    "stats.y.required":             "Campo requerido faltante: y",
+    "stats.xy.list":                "Los campos 'x' e 'y' deben ser listas.",
+    "stats.xy.length":              "x (len={x_len}) e y (len={y_len}) deben tener la misma longitud.",
+    "stats.xy.minimum_2":           "Se requieren al menos 2 puntos de datos para correlación.",
+    "stats.xy.minimum_3":           "Se requieren al menos 3 puntos de datos para regresión.",
+    "stats.xy.too_large":           "Los datos superan {max} puntos.",
+    "stats.xy.non_numeric":         "Valores no numéricos: {error}",
+    "stats.methods.list":           "El campo 'methods' debe ser una lista.",
+    "stats.regression.type_invalid": "Tipo inválido. Use 'linear', 'log_linear' o 'power_law'.",
+    "stats.regression.failed":      "Error en la regresión: {error}",
+
+    # -----------------------------------------------------------------------
+    # Liquid
+    # -----------------------------------------------------------------------
+    "liquid.overview.failed":       "No se pudo obtener resumen de Liquid: {error}",
+    "liquid.assets.failed":         "No se pudieron obtener los activos Liquid: {error}",
+    "liquid.compare.failed":        "No se pudo generar la comparación: {error}",
+    "liquid.peg.failed":            "No se pudo obtener información de peg: {error}",
+    "liquid.amount.required":       "Se requiere amount_usd",
+    "liquid.amount.invalid":        "amount_usd debe ser un número",
+    "liquid.amount.positive":       "amount_usd debe ser positivo",
+    "liquid.urgency.invalid":       "urgency debe ser uno de: low, medium, high, instant",
+    "liquid.privacy.invalid":       "privacy debe ser uno de: normal, high, confidential",
+    "liquid.recommend.failed":      "Error en la recomendación: {error}",
+
+    # -----------------------------------------------------------------------
+    # Recipients
+    # -----------------------------------------------------------------------
+    "recipients.auth.required":     "Se requiere autenticación",
+    "recipients.body.invalid":      "Cuerpo inválido",
+    "recipients.created":           "Destinatario creado",
+    "recipients.create.failed":     "Error al crear destinatario: {error}",
+    "recipients.list.failed":       "No se pudieron listar destinatarios: {error}",
+    "recipients.get.failed":        "Error al consultar destinatario: {error}",
+    "recipients.body.empty":        "Cuerpo vacío",
+    "recipients.updated":           "Destinatario actualizado",
+    "recipients.update.failed":     "Error al actualizar: {error}",
+    "recipients.not_found":         "Destinatario no encontrado",
+    "recipients.deleted":           "Destinatario eliminado",
+    "recipients.delete.failed":     "Error al eliminar: {error}",
+
+    # -----------------------------------------------------------------------
+    # Reminders
+    # -----------------------------------------------------------------------
+    "reminders.auth.required":      "Se requiere autenticación",
+    "reminders.body.invalid":       "Cuerpo inválido",
+    "reminders.recipient_id.required": "recipient_id requerido (entero)",
+    "reminders.created":            "Recordatorio creado",
+    "reminders.create.failed":      "Error al crear recordatorio: {error}",
+    "reminders.list.failed":        "Error al listar recordatorios: {error}",
+    "reminders.body.empty":         "Cuerpo vacío",
+    "reminders.updated":            "Recordatorio actualizado",
+    "reminders.not_found":          "Recordatorio no encontrado",
+    "reminders.deleted":            "Recordatorio eliminado",
+
+    # -----------------------------------------------------------------------
+    # Sends
+    # -----------------------------------------------------------------------
+    "sends.auth.required":          "Se requiere autenticación",
+    "sends.body.invalid":           "Cuerpo inválido",
+    "sends.recipient_id.required":  "recipient_id requerido (entero)",
+    "sends.amount.required":        "amount_usd requerido (numérico)",
+    "sends.invoice.failed":         "Error al generar invoice: {error}",
+
+    # -----------------------------------------------------------------------
+    # Splits (non-custodial remittance router)
+    # -----------------------------------------------------------------------
+    "splits.label.required":        "label requerido",
+    "splits.profile.not_found":     "Perfil de split no encontrado",
+    "splits.rules.required":        "Se requiere una lista de reglas (rules)",
+    "splits.profile_id.required":   "profile_id requerido (entero)",
+    "splits.amount.required":       "amount_usd requerido (numérico)",
+    "splits.build.failed":          "Error al construir split: {error}",
+
+    # -----------------------------------------------------------------------
+    # Admin (extra)
+    # -----------------------------------------------------------------------
+    "admin.target.required":        "Se requiere target_pubkey",
+    "admin.user.not_found":         "Usuario no encontrado",
+    "admin.token.required":         "Se requiere token para action=revoke",
+    "admin.action.unknown":         "Acción desconocida: {action}",
+    "admin.key.required":           "Se requiere key para action=set",
+    "admin.delete.confirm":         "Establezca confirm='DELETE' para confirmar la eliminación irreversible",
+
+    # -----------------------------------------------------------------------
+    # Export (extra)
+    # -----------------------------------------------------------------------
+    "export.pubkey.invalid":        "Clave pública inválida",
+    "export.dates.integer":         "date_from y date_to deben ser enteros",
+    "export.year_month.integer":    "year y month deben ser enteros",
+    "export.month.range":           "month debe estar entre 1 y 12",
+    "export.year.range":            "year fuera de rango válido",
+    "export.amount.number":         "amount_usd debe ser un número",
+    "export.amount.positive":       "amount_usd debe ser positivo",
+    "export.numeric.invalid":       "Parámetro numérico inválido",
+    "export.monthly.positive":      "monthly_usd debe ser positivo",
+    "export.years.range":           "years debe estar entre 1 y 50",
+    "export.report_type.unknown":   "report_type desconocido '{type}'. Valores válidos: savings, statement, remittance, pension",
+
+    # -----------------------------------------------------------------------
+    # Locale validation
+    # -----------------------------------------------------------------------
+    "locale.invalid":               "Idioma inválido. Use 'en' o 'es'.",
 }
