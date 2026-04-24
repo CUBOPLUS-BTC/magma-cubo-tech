@@ -3,7 +3,7 @@
 	import { api } from '$lib/api/client';
 	import { endpoints } from '$lib/api/endpoints';
 	import { i18n } from '$lib/i18n/index.svelte';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createQuery, keepPreviousData } from '@tanstack/svelte-query';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
@@ -15,9 +15,14 @@
 	import AnimatedNumber from '$lib/components/animated-number.svelte';
 	import { animateIn, staggerChildren, pressScale } from '$lib/motion';
 	import Clock from 'phosphor-svelte/lib/Clock';
+	import UserCircle from 'phosphor-svelte/lib/UserCircle';
+	import Bell from 'phosphor-svelte/lib/Bell';
+	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
 	import Geo from '$lib/components/geo.svelte';
 	import PdfExportButton from '$lib/components/pdf-export-button.svelte';
 	import { exportRemittancePdf } from '$lib/utils/export-pdf';
+	import { resolve } from '$app/paths';
+	import { springHover, pressScale as pressScaleAction } from '$lib/motion';
 
 	const freqLabel: Record<string, string> = { monthly: 'Mensual', biweekly: 'Quincenal', weekly: 'Semanal' };
 
@@ -42,6 +47,7 @@
 		queryKey: ['remittance-compare', queryInput] as const,
 		queryFn: () => api.post<RemittanceResult>(endpoints.remittance.compare, queryInput!),
 		enabled: queryInput !== null,
+		placeholderData: keepPreviousData,
 	}));
 
 	function handleCompare() {
@@ -63,6 +69,47 @@
 		<h1 class="font-heading text-2xl font-bold tracking-tight">{i18n.t.remittance.title}</h1>
 		<p class="text-sm text-muted-foreground mt-1">{i18n.t.remittance.corridor}</p>
 	</div>
+
+	<section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+		<a
+			href={resolve('/remittance/recipients')}
+			class="group block"
+			use:springHover={{ scale: 1.02 }}
+			use:pressScaleAction
+		>
+			<Card class="h-full transition-colors hover:bg-muted">
+				<CardContent class="pt-6 space-y-3">
+					<div class="flex items-center justify-between">
+						<UserCircle size={26} class="text-primary" weight="regular" />
+						<ArrowRight size={16} class="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" weight="bold" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-heading text-sm font-semibold">Destinatarios</h3>
+						<p class="text-xs text-muted-foreground">Guardá a tu familia y enviá con un click.</p>
+					</div>
+				</CardContent>
+			</Card>
+		</a>
+		<a
+			href={resolve('/remittance/reminders')}
+			class="group block"
+			use:springHover={{ scale: 1.02 }}
+			use:pressScaleAction
+		>
+			<Card class="h-full transition-colors hover:bg-muted">
+				<CardContent class="pt-6 space-y-3">
+					<div class="flex items-center justify-between">
+						<Bell size={26} class="text-amber-500" weight="regular" />
+						<ArrowRight size={16} class="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" weight="bold" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-heading text-sm font-semibold">Recordatorios</h3>
+						<p class="text-xs text-muted-foreground">Te avisamos cuándo enviar. Vos firmás desde tu wallet.</p>
+					</div>
+				</CardContent>
+			</Card>
+		</a>
+	</section>
 
 	<Card>
 		<CardHeader>

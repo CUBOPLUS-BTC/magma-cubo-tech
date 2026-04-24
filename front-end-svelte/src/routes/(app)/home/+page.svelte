@@ -11,12 +11,7 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import PaperPlaneTilt from 'phosphor-svelte/lib/PaperPlaneTilt';
-	import PiggyBank from 'phosphor-svelte/lib/PiggyBank';
-	import CurrencyBtc from 'phosphor-svelte/lib/CurrencyBtc';
-	import Cube from 'phosphor-svelte/lib/Cube';
-	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
-	import ArrowsLeftRight from 'phosphor-svelte/lib/ArrowsLeftRight';
+	import { PaperPlaneTilt, PiggyBank, CurrencyBtc, BookBookmark, Cube, ArrowRight, ArrowsLeftRight } from 'phosphor-svelte';
 	import Geo from '$lib/components/geo.svelte';
 	import AnimatedNumber from '$lib/components/animated-number.svelte';
 	import { animateIn, staggerChildren, inViewStagger, springHover, pressScale } from '$lib/motion';
@@ -42,7 +37,6 @@
 		queryKey: ['alert-status'],
 		queryFn: () => api.get<AlertStatus>(endpoints.alerts.status),
 		refetchInterval: 30_000,
-		retry: 1,
 	}));
 
 	let price = $derived(priceQuery.data ?? null);
@@ -85,6 +79,14 @@
 			href: '/savings',
 			color: 'text-amber-500',
 		},
+		// { icon: Drop, title: () => i18n.t.home.tools.liquid.title, description: () => i18n.t.home.tools.liquid.description, href: '/liquid', color: 'text-cyan-500' },
+		{
+			icon: BookBookmark,
+			title: () => i18n.t.home.tools.education.title,
+			description: () => i18n.t.home.tools.education.description,
+			href: '/education',
+			color: 'text-violet-500',
+		},
 	]);
 </script>
 
@@ -118,15 +120,13 @@
 			<div class="flex items-start gap-5">
 				<Geo state="idle" class="w-20 h-20 shrink-0 hidden sm:block" />
 				<div class="space-y-2">
-					<span class="text-sm font-medium text-muted-foreground uppercase tracking-wider">BTC/USD</span>
-					<div>
-						<span class="font-heading text-5xl sm:text-6xl font-bold text-foreground tabular-nums tracking-tight">
-							<AnimatedNumber
-								value={price.price_usd}
-								format={formatUSD}
-								duration={1200}
-							/>
-						</span>
+					<span class="text-xs font-semibold text-muted-foreground uppercase tracking-widest">BTC / USD</span>
+					<div class="font-heading text-5xl sm:text-6xl lg:text-7xl font-bold tabular-nums tracking-tight text-foreground">
+						<AnimatedNumber
+							value={price.price_usd}
+							format={formatUSD}
+							duration={1200}
+						/>
 					</div>
 					<div class="flex gap-2 pt-1">
 						<Badge variant="secondary" class="text-xs font-normal">
@@ -138,9 +138,9 @@
 			</div>
 		{:else}
 			<div class="space-y-3">
-				<Skeleton class="h-4 w-16" />
-				<Skeleton class="h-14 w-64" />
-				<Skeleton class="h-5 w-32" />
+				<Skeleton class="h-3 w-16" />
+				<Skeleton class="h-16 w-72" />
+				<Skeleton class="h-5 w-36" />
 			</div>
 		{/if}
 	</section>
@@ -218,23 +218,25 @@
 
 	<section use:inViewStagger={{ y: 20, staggerDelay: 0.09 }}>
 		<h2 class="font-heading text-lg font-semibold mb-5">{i18n.t.home.toolsTitle}</h2>
-		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
 			{#each tools as tool (tool.href)}
 				<a
-					href={resolve(tool.href as '/remittance' | '/pension' | '/savings')}
+					href={resolve(tool.href as any)}
 					class="group block h-full"
 					use:springHover={{ scale: 1.02 }}
 					use:pressScale
 				>
-					<Card class="p-6 h-full transition-colors duration-200 hover:bg-muted">
+					<Card class="p-5 h-full transition-colors duration-200 hover:bg-muted/60">
 						<div class="space-y-4">
-							<div class="flex items-center justify-between">
-								<tool.icon size={28} class={tool.color} weight="regular" />
-								<ArrowRight size={18} class="text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary" weight="bold" />
+							<div class="flex items-start justify-between">
+								<div class="p-2 rounded-xl bg-muted">
+									<tool.icon size={22} class={tool.color} weight="fill" />
+								</div>
+								<ArrowRight size={16} class="text-muted-foreground/40 mt-1 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary" weight="bold" />
 							</div>
-							<div class="space-y-1.5">
-								<h3 class="font-heading text-base font-semibold text-foreground">{tool.title()}</h3>
-								<p class="text-sm text-muted-foreground leading-relaxed">{tool.description()}</p>
+							<div class="space-y-1">
+								<h3 class="font-heading text-sm font-semibold text-foreground">{tool.title()}</h3>
+								<p class="text-xs text-muted-foreground leading-relaxed">{tool.description()}</p>
 							</div>
 						</div>
 					</Card>

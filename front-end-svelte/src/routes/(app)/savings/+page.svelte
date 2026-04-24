@@ -5,7 +5,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { i18n } from '$lib/i18n/index.svelte';
 	import { formatUSD } from '$lib/utils/formatters';
-	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { createQuery, createMutation, keepPreviousData, useQueryClient } from '@tanstack/svelte-query';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -47,6 +47,7 @@
 		queryKey: ['savings-projection', projectionInput] as const,
 		queryFn: () => api.post<ProjectionResult>(endpoints.savings.project, projectionInput!),
 		enabled: projectionInput !== null,
+		placeholderData: keepPreviousData,
 	}));
 
 	function runProjection() {

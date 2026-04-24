@@ -31,6 +31,7 @@ SUPPORTED_EVENTS = {
     "savings_updated",
     "score_computed",
     "session_created",
+    "remittance_reminder",
 }
 
 # Maximum subscriptions per user

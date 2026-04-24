@@ -344,7 +344,48 @@ def task_database_maintenance() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 10. Webhook retry (every 10 min) — factory
+# 10. Remittance reminders (every 60 s) — factory
+# ---------------------------------------------------------------------------
+
+def task_fire_remittance_reminders(reminder_dispatcher: Any) -> Callable[[], None]:
+    """Return a task that fires due remittance reminders.
+
+    Scans the ``reminders`` table for rows where ``paused = 0`` and
+    ``next_fire_at <= now`` and dispatches each one through its configured
+    channels. The dispatcher is responsible for advancing ``next_fire_at``
+    and recording per-channel events.
+    """
+
+    def _task() -> None:
+        try:
+            manager = reminder_dispatcher.manager
+            due = manager.due_reminders(int(time.time()))
+            if not due:
+                return
+            fired = 0
+            for reminder in due:
+                try:
+                    reminder_dispatcher.dispatch(reminder)
+                    fired += 1
+                except Exception as exc:
+                    _log(
+                        "error",
+                        "remittance_reminders",
+                        f"reminder {reminder.get('id')} failed: {exc}",
+                    )
+            _log(
+                "info",
+                "remittance_reminders",
+                f"Dispatched {fired}/{len(due)} due reminder(s).",
+            )
+        except Exception as exc:
+            _log("error", "remittance_reminders", f"{type(exc).__name__}: {exc}")
+
+    return _task
+
+
+# ---------------------------------------------------------------------------
+# 11. Webhook retry (every 10 min) — factory
 # ---------------------------------------------------------------------------
 
 def task_webhook_retry(dispatcher: "WebhookDispatcher") -> Callable[[], None]:
@@ -388,6 +429,7 @@ def build_default_scheduler(
     analytics_engine: Optional[Any] = None,
     rate_limit_storage: Optional[Any] = None,
     webhook_dispatcher: Optional["WebhookDispatcher"] = None,
+    reminder_dispatcher: Optional[Any] = None,
 ) -> "TaskScheduler":
     """Create a :class:`TaskScheduler` pre-wired with all standard tasks.
 
@@ -436,6 +478,13 @@ def build_default_scheduler(
             "webhook_retry",
             task_webhook_retry(webhook_dispatcher),
             interval=600,
+        )
+
+    if reminder_dispatcher is not None:
+        sched.register(
+            "remittance_reminders",
+            task_fire_remittance_reminders(reminder_dispatcher),
+            interval=60,
         )
 
     return sched

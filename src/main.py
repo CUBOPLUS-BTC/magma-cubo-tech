@@ -28,7 +28,6 @@ from app.alerts.monitor import AlertMonitor
 from app.alerts.routes import handle_alerts, handle_alert_status
 from app.gamification.routes import handle_achievements
 from app.gamification.achievements import AchievementEngine
-from app.scoring.routes import handle_score, handle_score_summary
 from app.preferences.routes import (
     handle_get_preferences,
     handle_update_preferences,
@@ -39,6 +38,13 @@ from app.lightning.routes import (
     handle_lightning_overview,
     handle_lightning_compare,
     handle_lightning_recommend,
+)
+from app.liquid.routes import (
+    handle_liquid_overview,
+    handle_liquid_assets,
+    handle_liquid_compare,
+    handle_liquid_peg,
+    handle_liquid_recommend,
 )
 from app.analytics.routes import (
     handle_user_analytics,
@@ -108,6 +114,9 @@ from app.education.routes import (
     handle_lesson_list,
     handle_lesson_detail,
     handle_quiz,
+    handle_units,
+    handle_progress_get,
+    handle_progress_lose_heart,
 )
 from app.notifications.routes import (
     handle_notification_templates,
@@ -119,6 +128,27 @@ from app.stats.routes import (
     handle_stats_correlation,
     handle_stats_regression,
 )
+from app.recipients.routes import (
+    handle_list_recipients,
+    handle_create_recipient,
+    handle_get_recipient,
+    handle_update_recipient,
+    handle_delete_recipient,
+)
+from app.reminders.routes import (
+    handle_list_reminders,
+    handle_create_reminder,
+    handle_get_reminder,
+    handle_update_reminder,
+    handle_delete_reminder,
+    handle_list_reminder_events,
+)
+from app.reminders import RemindersManager, ReminderDispatcher
+from app.recipients import RecipientsManager
+from app.sends import SendExecutor
+from app.sends.routes import handle_execute_send
+from app.migrations.runner import MigrationRunner
+from app.database import _is_postgres, get_conn
 
 _achievement_engine = AchievementEngine()
 _price_aggregator = PriceAggregator(settings.COINGECKO_API_KEY)
@@ -128,6 +158,12 @@ _rate_limiter = RateLimiter(_rate_limit_storage)
 _webhook_manager = WebhookManager()
 _webhook_dispatcher = WebhookDispatcher(_webhook_manager)
 _analytics_engine = AnalyticsEngine()
+_reminders_manager = RemindersManager()
+_reminder_dispatcher = ReminderDispatcher(
+    _reminders_manager, webhook_dispatcher=_webhook_dispatcher
+)
+_recipients_manager = RecipientsManager()
+_send_executor = SendExecutor(_recipients_manager, _price_aggregator)
 _logger = StructuredLogger("magma.server")
 
 ROUTES = [
@@ -151,9 +187,6 @@ ROUTES = [
     ("GET", re.compile(r"^/alerts/status$"), "_alert_status"),
     ("POST", re.compile(r"^/pension/projection$"), "_pension_projection"),
     ("GET", re.compile(r"^/network/status$"), "_network_status"),
-    # Scoring
-    ("POST", re.compile(r"^/score$"),          "_score"),
-    ("GET",  re.compile(r"^/score/summary$"),  "_score_summary"),
     # Preferences
     ("GET",    re.compile(r"^/preferences$"),         "_preferences_get"),
     ("PATCH",  re.compile(r"^/preferences$"),         "_preferences_update"),
@@ -163,6 +196,12 @@ ROUTES = [
     ("GET",  re.compile(r"^/lightning/overview$"),   "_lightning_overview"),
     ("GET",  re.compile(r"^/lightning/compare$"),    "_lightning_compare"),
     ("POST", re.compile(r"^/lightning/recommend$"),  "_lightning_recommend"),
+    # Liquid
+    ("GET",  re.compile(r"^/liquid/overview$"),    "_liquid_overview"),
+    ("GET",  re.compile(r"^/liquid/assets$"),      "_liquid_assets"),
+    ("GET",  re.compile(r"^/liquid/compare$"),     "_liquid_compare"),
+    ("GET",  re.compile(r"^/liquid/peg-info$"),    "_liquid_peg"),
+    ("POST", re.compile(r"^/liquid/recommend$"),   "_liquid_recommend"),
     # Analytics
     ("GET",  re.compile(r"^/analytics/user$"),       "_analytics_user"),
     ("GET",  re.compile(r"^/analytics/platform$"),   "_analytics_platform"),
@@ -219,6 +258,9 @@ ROUTES = [
     ("GET",  re.compile(r"^/education/lessons$"),   "_education_lessons"),
     ("GET",  re.compile(r"^/education/lesson$"),    "_education_lesson_detail"),
     ("POST", re.compile(r"^/education/quiz$"),      "_education_quiz"),
+    ("GET",  re.compile(r"^/education/units$"),     "_education_units"),
+    ("GET",  re.compile(r"^/education/progress$"),  "_education_progress"),
+    ("POST", re.compile(r"^/education/progress/lose-heart$"), "_education_lose_heart"),
     # Notifications
     ("GET",  re.compile(r"^/notifications/templates$"), "_notification_templates"),
     ("POST", re.compile(r"^/notifications/preview$"),   "_notification_preview"),
@@ -227,6 +269,21 @@ ROUTES = [
     ("POST", re.compile(r"^/stats/analyze$"),       "_stats_analyze"),
     ("POST", re.compile(r"^/stats/correlation$"),   "_stats_correlation"),
     ("POST", re.compile(r"^/stats/regression$"),    "_stats_regression"),
+    # Recipients (remittance)
+    ("GET",    re.compile(r"^/recipients$"),                        "_recipients_list"),
+    ("POST",   re.compile(r"^/recipients$"),                        "_recipients_create"),
+    ("GET",    re.compile(r"^/recipients/(?P<rid>\d+)$"),           "_recipients_get"),
+    ("PATCH",  re.compile(r"^/recipients/(?P<rid>\d+)$"),           "_recipients_update"),
+    ("DELETE", re.compile(r"^/recipients/(?P<rid>\d+)$"),           "_recipients_delete"),
+    # Reminders (remittance)
+    ("GET",    re.compile(r"^/reminders$"),                                 "_reminders_list"),
+    ("POST",   re.compile(r"^/reminders$"),                                 "_reminders_create"),
+    ("GET",    re.compile(r"^/reminders/(?P<rid>\d+)$"),                    "_reminders_get"),
+    ("PATCH",  re.compile(r"^/reminders/(?P<rid>\d+)$"),                    "_reminders_update"),
+    ("DELETE", re.compile(r"^/reminders/(?P<rid>\d+)$"),                    "_reminders_delete"),
+    ("GET",    re.compile(r"^/reminders/(?P<rid>\d+)/events$"),             "_reminders_events"),
+    # Sends (remittance execution)
+    ("POST",   re.compile(r"^/sends/execute$"),                             "_sends_execute"),
 ]
 
 
@@ -434,27 +491,6 @@ class Handler(BaseHTTPRequestHandler):
         return handle_network_status(body)
 
     # ------------------------------------------------------------------
-    # Scoring
-    # ------------------------------------------------------------------
-
-    def _score(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
-        result = handle_score(body)
-        if result[1] == 200:
-            auth_header = self.headers.get("Authorization", "")
-            url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
-            me_data, me_status = handle_me(auth_header, url=url, method=self.command)
-            if me_status == 200:
-                _achievement_engine.check_and_award(
-                    me_data["pubkey"], "score", {"total_score": result[0].get("total_score", 0)}
-                )
-        return result
-
-    def _score_summary(
-        self, params: dict, body: dict, query: dict
-    ) -> tuple[dict, int]:
-        return handle_score_summary(query)
-
-    # ------------------------------------------------------------------
     # Preferences
     # ------------------------------------------------------------------
 
@@ -516,6 +552,35 @@ class Handler(BaseHTTPRequestHandler):
         self, params: dict, body: dict, query: dict
     ) -> tuple[dict, int]:
         return handle_lightning_recommend(body, query)
+
+    # ------------------------------------------------------------------
+    # Liquid
+    # ------------------------------------------------------------------
+
+    def _liquid_overview(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_liquid_overview(body)
+
+    def _liquid_assets(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_liquid_assets(body)
+
+    def _liquid_compare(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_liquid_compare(body)
+
+    def _liquid_peg(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_liquid_peg(body)
+
+    def _liquid_recommend(
+        self, params: dict, body: dict, query: dict
+    ) -> tuple[dict, int]:
+        return handle_liquid_recommend(body, query)
 
     # ------------------------------------------------------------------
     # Analytics
@@ -794,7 +859,26 @@ class Handler(BaseHTTPRequestHandler):
         return handle_lesson_detail(query)
 
     def _education_quiz(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
-        return handle_quiz(body)
+        # Optional auth: if token is present and valid, progress is recorded.
+        pubkey, status = self._auth_pubkey()
+        return handle_quiz(body, pubkey if status == 200 else None)
+
+    def _education_units(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        # Optional auth: enriches with per-lesson completion status when logged in.
+        pubkey, status = self._auth_pubkey()
+        return handle_units(query, pubkey if status == 200 else None)
+
+    def _education_progress(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_progress_get(pubkey)
+
+    def _education_lose_heart(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_progress_lose_heart(pubkey, body)
 
     # ------------------------------------------------------------------
     # Notifications
@@ -822,6 +906,126 @@ class Handler(BaseHTTPRequestHandler):
     def _stats_regression(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
         return handle_stats_regression(body)
 
+    # ------------------------------------------------------------------
+    # Recipients (remittance)
+    # ------------------------------------------------------------------
+
+    def _auth_pubkey(self) -> tuple[str, int]:
+        auth_header = self.headers.get("Authorization", "")
+        url = f"{settings.PUBLIC_URL}{self.path.split('?')[0]}"
+        me_data, status = handle_me(auth_header, url=url, method=self.command)
+        if status != 200:
+            return "", status
+        return me_data["pubkey"], 200
+
+    def _recipients_list(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_list_recipients(pubkey)
+
+    def _recipients_create(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_create_recipient(body, pubkey)
+
+    def _recipients_get(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_get_recipient(rid, pubkey)
+
+    def _recipients_update(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_update_recipient(rid, body, pubkey)
+
+    def _recipients_delete(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_delete_recipient(rid, pubkey)
+
+    # ------------------------------------------------------------------
+    # Reminders (remittance)
+    # ------------------------------------------------------------------
+
+    def _reminders_list(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_list_reminders(pubkey)
+
+    def _reminders_create(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_create_reminder(body, pubkey)
+
+    def _reminders_get(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_get_reminder(rid, pubkey)
+
+    def _reminders_update(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_update_reminder(rid, body, pubkey)
+
+    def _reminders_delete(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_delete_reminder(rid, pubkey)
+
+    def _reminders_events(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        try:
+            rid = int(params.get("rid", 0))
+        except (TypeError, ValueError):
+            return {"detail": "id inválido"}, 400
+        return handle_list_reminder_events(rid, pubkey, query)
+
+    # ------------------------------------------------------------------
+    # Sends (LNURL-pay orchestration)
+    # ------------------------------------------------------------------
+
+    def _sends_execute(self, params: dict, body: dict, query: dict) -> tuple[dict, int]:
+        pubkey, status = self._auth_pubkey()
+        if status != 200:
+            return {"detail": "Authentication required"}, 401
+        return handle_execute_send(body, pubkey, _send_executor)
+
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
@@ -831,12 +1035,21 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 if __name__ == "__main__":
     setup_logging()
     init_db()
+    # Aplicar migraciones pendientes (crea tablas recipients + reminders si faltan).
+    try:
+        _runner = MigrationRunner(get_conn(), is_postgres=_is_postgres())
+        _applied = _runner.apply_all()
+        if _applied:
+            _logger.info("migrations_applied", count=len(_applied))
+    except Exception as _exc:
+        _logger.error("migrations_failed", error=str(_exc))
     _monitor.start()
     _scheduler = build_default_scheduler(
         price_aggregator=_price_aggregator,
         webhook_dispatcher=_webhook_dispatcher,
         analytics_engine=_analytics_engine,
         rate_limit_storage=_rate_limit_storage,
+        reminder_dispatcher=_reminder_dispatcher,
     )
     _scheduler.start()
     port = 8000

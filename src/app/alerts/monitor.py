@@ -61,7 +61,7 @@ class AlertMonitor:
         if half_hour <= 5:
             self._add_alert(
                 "fee_low",
-                f"Fees are very low ({half_hour} sat/vB) — good time for on-chain transactions",
+                f"Fees are very low ({half_hour} sat/vB). Good time for on-chain transactions.",
                 {"fee_sat_vb": half_hour, "recommendation": "on-chain"},
             )
         elif half_hour >= 50:
@@ -129,13 +129,13 @@ class AlertMonitor:
 
         if half_hour <= 5:
             recommendation = "on-chain"
-            message = "Low fees — good for on-chain transactions"
+            message = "Low fees. Good time for on-chain transactions."
         elif half_hour <= 20:
             recommendation = "either"
-            message = "Moderate fees — both channels work"
+            message = "Moderate fees. Both channels work."
         else:
             recommendation = "lightning"
-            message = "High fees — use Lightning Network"
+            message = "High fees. Use Lightning Network."
 
         return {
             "fees": fees if isinstance(fees, dict) else {},

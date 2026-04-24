@@ -1,0 +1,7 @@
+name = "magma-app"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+[vars]
+PUBLIC_API_URL = "https://api.eclalune.com"

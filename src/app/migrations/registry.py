@@ -296,4 +296,147 @@ MIGRATIONS: list[dict] = [
         """,
         "created_at": "2025-04-15",
     },
+    # ------------------------------------------------------------------
+    # 0013 — remittance recipients
+    # ------------------------------------------------------------------
+    {
+        "id": "0013",
+        "name": "create_recipients_table",
+        "sql_up": """
+            CREATE TABLE IF NOT EXISTS recipients (
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                pubkey              TEXT    NOT NULL,
+                name                TEXT    NOT NULL,
+                lightning_address   TEXT    NOT NULL,
+                country             TEXT    NOT NULL DEFAULT 'SV',
+                default_amount_usd  REAL,
+                min_sendable_msat   INTEGER,
+                max_sendable_msat   INTEGER,
+                created_at          INTEGER NOT NULL,
+                updated_at          INTEGER NOT NULL,
+                FOREIGN KEY (pubkey) REFERENCES users(pubkey) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_recipients_pubkey
+                ON recipients (pubkey);
+        """,
+        "sql_down": """
+            DROP INDEX IF EXISTS idx_recipients_pubkey;
+            DROP TABLE IF EXISTS recipients;
+        """,
+        "created_at": "2026-04-23",
+    },
+    # ------------------------------------------------------------------
+    # 0014 — remittance reminders
+    # ------------------------------------------------------------------
+    {
+        "id": "0014",
+        "name": "create_reminders_and_events_tables",
+        "sql_up": """
+            CREATE TABLE IF NOT EXISTS reminders (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                pubkey         TEXT    NOT NULL,
+                recipient_id   INTEGER NOT NULL,
+                cadence        TEXT    NOT NULL DEFAULT 'monthly',
+                day_of_month   INTEGER NOT NULL DEFAULT 1,
+                hour_local     INTEGER NOT NULL DEFAULT 9,
+                timezone       TEXT    NOT NULL DEFAULT 'America/El_Salvador',
+                channels       TEXT    NOT NULL DEFAULT '["webhook"]',
+                paused         INTEGER NOT NULL DEFAULT 0,
+                next_fire_at   INTEGER NOT NULL,
+                last_fired_at  INTEGER,
+                fire_count     INTEGER NOT NULL DEFAULT 0,
+                created_at     INTEGER NOT NULL,
+                updated_at     INTEGER NOT NULL,
+                FOREIGN KEY (pubkey) REFERENCES users(pubkey) ON DELETE CASCADE,
+                FOREIGN KEY (recipient_id) REFERENCES recipients(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_reminders_pubkey
+                ON reminders (pubkey);
+            CREATE INDEX IF NOT EXISTS idx_reminders_next_fire
+                ON reminders (next_fire_at, paused);
+            CREATE TABLE IF NOT EXISTS reminder_events (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                reminder_id   INTEGER NOT NULL,
+                channel       TEXT    NOT NULL,
+                status        TEXT    NOT NULL,
+                error         TEXT,
+                fired_at      INTEGER NOT NULL,
+                FOREIGN KEY (reminder_id) REFERENCES reminders(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_reminder_events_reminder
+                ON reminder_events (reminder_id);
+        """,
+        "sql_down": """
+            DROP INDEX IF EXISTS idx_reminder_events_reminder;
+            DROP TABLE IF EXISTS reminder_events;
+            DROP INDEX IF EXISTS idx_reminders_next_fire;
+            DROP INDEX IF EXISTS idx_reminders_pubkey;
+            DROP TABLE IF EXISTS reminders;
+        """,
+        "created_at": "2026-04-23",
+    },
+    # ------------------------------------------------------------------
+    # 0015 — email opt-in on user_preferences (for reminder email channel)
+    # ------------------------------------------------------------------
+    {
+        "id": "0015",
+        "name": "add_email_to_user_preferences",
+        "sql_up": """
+            ALTER TABLE user_preferences ADD COLUMN email TEXT;
+        """,
+        "sql_down": """
+            CREATE TABLE user_preferences_backup AS
+                SELECT pubkey, fee_alert_low, fee_alert_high,
+                       price_alerts, alerts_enabled, updated_at
+                FROM user_preferences;
+            DROP TABLE user_preferences;
+            ALTER TABLE user_preferences_backup RENAME TO user_preferences;
+        """,
+        "created_at": "2026-04-23",
+    },
+    # ------------------------------------------------------------------
+    # 0016 — education progress + gamification state
+    # ------------------------------------------------------------------
+    {
+        "id": "0016",
+        "name": "create_education_progress_and_state",
+        "sql_up": """
+            CREATE TABLE IF NOT EXISTS education_progress (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                pubkey          TEXT    NOT NULL,
+                lesson_id       TEXT    NOT NULL,
+                score_pct       REAL    NOT NULL,
+                xp_earned       INTEGER NOT NULL DEFAULT 0,
+                hearts_lost     INTEGER NOT NULL DEFAULT 0,
+                completed_at    INTEGER NOT NULL,
+                FOREIGN KEY (pubkey) REFERENCES users(pubkey) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_education_progress_pubkey
+                ON education_progress (pubkey);
+            CREATE INDEX IF NOT EXISTS idx_education_progress_lesson
+                ON education_progress (pubkey, lesson_id);
+            CREATE TABLE IF NOT EXISTS education_state (
+                pubkey                  TEXT PRIMARY KEY,
+                xp_total                INTEGER NOT NULL DEFAULT 0,
+                hearts                  INTEGER NOT NULL DEFAULT 5,
+                hearts_max              INTEGER NOT NULL DEFAULT 5,
+                hearts_last_refill_at   INTEGER NOT NULL DEFAULT 0,
+                streak_days             INTEGER NOT NULL DEFAULT 0,
+                streak_last_day         TEXT,
+                daily_xp_goal           INTEGER NOT NULL DEFAULT 30,
+                daily_xp_today          INTEGER NOT NULL DEFAULT 0,
+                daily_xp_day            TEXT,
+                created_at              INTEGER NOT NULL,
+                updated_at              INTEGER NOT NULL,
+                FOREIGN KEY (pubkey) REFERENCES users(pubkey) ON DELETE CASCADE
+            );
+        """,
+        "sql_down": """
+            DROP TABLE IF EXISTS education_state;
+            DROP INDEX IF EXISTS idx_education_progress_lesson;
+            DROP INDEX IF EXISTS idx_education_progress_pubkey;
+            DROP TABLE IF EXISTS education_progress;
+        """,
+        "created_at": "2026-04-23",
+    },
 ]

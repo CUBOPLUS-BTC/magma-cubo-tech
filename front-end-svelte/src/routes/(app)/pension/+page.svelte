@@ -4,7 +4,7 @@
 	import { endpoints } from '$lib/api/endpoints';
 	import { i18n } from '$lib/i18n/index.svelte';
 	import { formatUSD } from '$lib/utils/formatters';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createQuery, keepPreviousData } from '@tanstack/svelte-query';
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
@@ -47,6 +47,7 @@
 		queryKey: ['pension-projection', queryInput] as const,
 		queryFn: () => api.post<PensionProjection>(endpoints.pension.projection, queryInput!),
 		enabled: queryInput !== null,
+		placeholderData: keepPreviousData,
 	}));
 
 	function handleCalculate() {

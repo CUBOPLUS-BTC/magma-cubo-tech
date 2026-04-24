@@ -6,7 +6,7 @@
   import { i18n } from '$lib/i18n/index.svelte';
   import { api } from '$lib/api/client';
   import { endpoints } from '$lib/api/endpoints';
-  import { createQuery } from '@tanstack/svelte-query';
+  import { createQuery, keepPreviousData } from '@tanstack/svelte-query';
   import { formatUSD } from '$lib/utils/formatters';
   import type { VerifiedPrice } from '$lib/models/price';
   import type { NetworkStatus } from '$lib/models/network';
@@ -54,6 +54,7 @@
   const remittanceQuery = createQuery(() => ({
     queryKey: ['landing-remittance', sendAmount] as const,
     queryFn: () => api.post<RemittanceResult>(endpoints.remittance.compare, { amount_usd: sendAmount, frequency: 'monthly' }),
+    placeholderData: keepPreviousData,
   }));
 
   // Live pension projection for DCA mockup

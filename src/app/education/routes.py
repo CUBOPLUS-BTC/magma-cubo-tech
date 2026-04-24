@@ -33,6 +33,10 @@ from __future__ import annotations
 
 from .glossary import GLOSSARY, search_glossary, get_by_category, get_by_difficulty
 from .lessons import LESSONS, get_lesson, list_lessons
+from .units import list_units, UNITS
+from .progress import EducationProgressManager
+
+_progress = EducationProgressManager()
 
 # ---------------------------------------------------------------------------
 # Glossary handler
@@ -225,7 +229,7 @@ def handle_lesson_detail(query: dict) -> tuple[dict, int]:
 # ---------------------------------------------------------------------------
 
 
-def handle_quiz(body: dict) -> tuple[dict, int]:
+def handle_quiz(body: dict, pubkey: str | None = None) -> tuple[dict, int]:
     """POST /education/quiz
 
     Expected body fields:
@@ -293,8 +297,9 @@ def handle_quiz(body: dict) -> tuple[dict, int]:
 
         # Determine pass/fail (60% threshold)
         passed = score_pct >= 60.0
+        hearts_lost = total - correct_count
 
-        return {
+        response: dict = {
             "lesson_id": lesson_id,
             "locale": locale,
             "score": {
@@ -305,7 +310,25 @@ def handle_quiz(body: dict) -> tuple[dict, int]:
                 "grade": _grade_label(score_pct, locale),
             },
             "results": results,
-        }, 200
+        }
+
+        # If authenticated, persist progress + award XP + spend hearts.
+        if pubkey:
+            try:
+                completion = _progress.record_lesson_complete(
+                    pubkey=pubkey,
+                    lesson_id=lesson_id,
+                    score_pct=score_pct,
+                    hearts_lost=hearts_lost,
+                )
+                if hearts_lost > 0:
+                    completion["state"] = _progress.lose_heart(pubkey, hearts_lost)
+                response["progress"] = completion
+            except Exception:
+                # Never fail the quiz on a gamification write glitch.
+                pass
+
+        return response, 200
 
     except Exception as exc:
         return {"detail": f"Quiz error: {exc}"}, 500
@@ -325,3 +348,120 @@ def _grade_label(score_pct: float, locale: str) -> str:
     if score_pct >= 60:
         return "Good — keep learning" if locale == "en" else "Bien — sigue aprendiendo"
     return "Keep practicing" if locale == "en" else "Sigue practicando"
+
+
+# ---------------------------------------------------------------------------
+# Units (learning path chapters)
+# ---------------------------------------------------------------------------
+
+
+def handle_units(query: dict, pubkey: str | None = None) -> tuple[dict, int]:
+    """GET /education/units
+
+    Returns the ordered list of chapters with lesson metadata and, if the
+    caller is authenticated, per-lesson completion status for unlocking
+    logic on the frontend.
+    """
+    try:
+        locale = (query.get("locale") or "en").strip().lower()
+        if locale not in ("en", "es"):
+            return {"detail": "Invalid locale. Use 'en' or 'es'."}, 400
+
+        units = list_units(locale)
+
+        # Lookup lesson meta by id for embedding in units.
+        lesson_meta: dict[str, dict] = {}
+        for lesson in LESSONS:
+            lesson_meta[lesson["id"]] = {
+                "id": lesson["id"],
+                "title": lesson[f"title_{locale}"],
+                "description": lesson[f"description_{locale}"],
+                "difficulty": lesson["difficulty"],
+                "duration_min": lesson["duration_min"],
+                "quiz_count": len(lesson.get("quiz") or []),
+            }
+
+        statuses = _progress.lesson_statuses(pubkey) if pubkey else {}
+
+        enriched_units = []
+        for unit in units:
+            lessons_info = []
+            for lid in unit["lesson_ids"]:
+                meta = lesson_meta.get(lid)
+                if meta is None:
+                    continue
+                lessons_info.append({
+                    **meta,
+                    "status": statuses.get(lid, {
+                        "best_score": 0.0,
+                        "passed": False,
+                        "perfect": False,
+                        "attempts": 0,
+                        "last_attempt_at": 0,
+                    }),
+                })
+            enriched_units.append({
+                **unit,
+                "lessons": lessons_info,
+            })
+
+        # Compute unlocking: first unit always unlocked. A unit is unlocked
+        # iff the previous unit has at least one passed lesson.
+        prev_unit_has_pass = True
+        for unit in enriched_units:
+            unit["unlocked"] = prev_unit_has_pass
+            passed_in_unit = any(l["status"]["passed"] for l in unit["lessons"])
+            unit["completed"] = (
+                len(unit["lessons"]) > 0
+                and all(l["status"]["passed"] for l in unit["lessons"])
+            )
+            unit["progress_pct"] = (
+                round(
+                    sum(1 for l in unit["lessons"] if l["status"]["passed"])
+                    / max(1, len(unit["lessons"])) * 100,
+                    1,
+                )
+                if unit["lessons"] else 0.0
+            )
+            prev_unit_has_pass = passed_in_unit
+
+        return {
+            "locale": locale,
+            "units": enriched_units,
+        }, 200
+    except Exception as exc:
+        return {"detail": f"Units error: {exc}"}, 500
+
+
+# ---------------------------------------------------------------------------
+# Progress + gamification state
+# ---------------------------------------------------------------------------
+
+
+def handle_progress_get(pubkey: str) -> tuple[dict, int]:
+    """GET /education/progress — full gamification state for the user."""
+    if not pubkey:
+        return {"detail": "Authentication required"}, 401
+    try:
+        state = _progress.get_state(pubkey)
+        statuses = _progress.lesson_statuses(pubkey)
+        return {
+            "state": state,
+            "lesson_statuses": statuses,
+        }, 200
+    except Exception as exc:
+        return {"detail": f"Progress error: {exc}"}, 500
+
+
+def handle_progress_lose_heart(pubkey: str, body: dict) -> tuple[dict, int]:
+    """POST /education/progress/lose-heart — spend 1 heart (wrong answer)."""
+    if not pubkey:
+        return {"detail": "Authentication required"}, 401
+    try:
+        count = 1
+        if isinstance(body, dict) and isinstance(body.get("count"), int):
+            count = max(1, min(5, body["count"]))
+        state = _progress.lose_heart(pubkey, count)
+        return {"state": state}, 200
+    except Exception as exc:
+        return {"detail": f"Heart loss error: {exc}"}, 500
