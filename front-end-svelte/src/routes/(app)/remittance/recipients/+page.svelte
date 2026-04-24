@@ -24,6 +24,7 @@
 	} from '$lib/models/recipient';
 	import { animateIn, staggerChildren, pressScale } from '$lib/motion';
 	import { resolve } from '$app/paths';
+	import Wallet from 'phosphor-svelte/lib/Wallet';
 
 	const qc = useQueryClient();
 
@@ -146,6 +147,13 @@
 			<p class="text-sm text-muted-foreground">
 				Aún no tenés destinatarios. Agregá al primero para empezar.
 			</p>
+			<a
+				href={resolve('/wallets')}
+				class="inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-1"
+			>
+				<Wallet size={12} />
+				{i18n.t.wallets.tipRecipients}
+			</a>
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2" use:staggerChildren={{ y: 16, staggerDelay: 0.05 }}>
@@ -192,6 +200,7 @@
 			<Dialog.Title>Nuevo destinatario</Dialog.Title>
 			<Dialog.Description>
 				Validamos la Lightning address contra la wallet receptora antes de guardarla.
+				<a href={resolve('/wallets')} class="text-primary hover:underline ml-1">{i18n.t.wallets.seeGuide} &rarr;</a>
 			</Dialog.Description>
 		</Dialog.Header>
 		<div class="space-y-4 py-2">

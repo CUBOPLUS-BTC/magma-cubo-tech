@@ -18,7 +18,9 @@
 	import UserCircle from 'phosphor-svelte/lib/UserCircle';
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
+	import GitFork from 'phosphor-svelte/lib/GitFork';
 	import Geo from '$lib/components/geo.svelte';
+	import WalletGuide from '$lib/components/wallet-guide.svelte';
 	import PdfExportButton from '$lib/components/pdf-export-button.svelte';
 	import { exportRemittancePdf } from '$lib/utils/export-pdf';
 	import { resolve } from '$app/paths';
@@ -70,7 +72,7 @@
 		<p class="text-sm text-muted-foreground mt-1">{i18n.t.remittance.corridor}</p>
 	</div>
 
-	<section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+	<section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 		<a
 			href={resolve('/remittance/recipients')}
 			class="group block"
@@ -105,6 +107,25 @@
 					<div class="space-y-1">
 						<h3 class="font-heading text-sm font-semibold">Recordatorios</h3>
 						<p class="text-xs text-muted-foreground">Te avisamos cuándo enviar. Vos firmás desde tu wallet.</p>
+					</div>
+				</CardContent>
+			</Card>
+		</a>
+		<a
+			href={resolve('/remittance/splits')}
+			class="group block"
+			use:springHover={{ scale: 1.02 }}
+			use:pressScaleAction
+		>
+			<Card class="h-full transition-colors hover:bg-muted border-dashed border-primary/30">
+				<CardContent class="pt-6 space-y-3">
+					<div class="flex items-center justify-between">
+						<GitFork size={26} class="text-emerald-500" weight="regular" />
+						<ArrowRight size={16} class="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" weight="bold" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-heading text-sm font-semibold">{i18n.t.splits.title}</h3>
+						<p class="text-xs text-muted-foreground">Repartí cada remesa a varias wallets. Sin custodia.</p>
 					</div>
 				</CardContent>
 			</Card>
@@ -195,7 +216,7 @@
 	</div>
 {:else if !result && !error}
 	<div class="mt-6 rounded-2xl border border-dashed border-border bg-muted p-8 text-center space-y-3" use:animateIn={{ y: [12, 0], delay: 0.3 }}>
-		<Geo state="waiting" class="w-24 h-24 mx-auto" />
+		<Geo state="sending" class="w-24 h-24 mx-auto" />
 		<p class="text-muted-foreground text-sm">{i18n.t.remittance.subtitle}</p>
 	</div>
 {/if}
@@ -209,7 +230,7 @@
 		<!-- Impact message hero -->
 		{#if result.savings_vs_worst > 0}
 			<div class="rounded-2xl border-2 border-primary bg-primary/5 p-6 text-center space-y-2">
-				<Geo state="success" class="w-16 h-16 mx-auto" />
+				<Geo state="sending" class="w-16 h-16 mx-auto" />
 				<p class="text-sm text-muted-foreground">{i18n.t.remittance.impactMessage}</p>
 				<p class="font-heading text-4xl font-bold text-primary tabular-nums">
 					<AnimatedNumber value={result.savings_vs_worst} format={(v) => `$${v.toFixed(2)}`} duration={1000} />
@@ -267,33 +288,11 @@
 			</div>
 		</div>
 
-		<!-- Deep links to wallets -->
+		<!-- Wallet guide -->
 		<div use:animateIn={{ y: [16, 0], delay: 0.5 }}>
-			<Card>
-				<CardHeader>
-					<CardTitle class="font-heading text-base">{i18n.t.remittance.walletsTitle}</CardTitle>
-					<p class="text-xs text-muted-foreground">{i18n.t.remittance.walletsSubtitle}</p>
-				</CardHeader>
-				<CardContent>
-					<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-						{#each [
-							{ name: 'Blink', url: 'https://www.blink.sv/', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20' },
-							{ name: 'Strike', url: 'https://strike.me/', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20' },
-							{ name: 'Phoenix', url: 'https://phoenix.acinq.co/', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20' },
-							{ name: 'WoS', url: 'https://www.walletofsatoshi.com/', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20' },
-						] as wallet}
-							<a
-								href={wallet.url}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors {wallet.color}"
-							>
-								{i18n.t.remittance.sendWith} {wallet.name}
-							</a>
-						{/each}
-					</div>
-				</CardContent>
-			</Card>
+			<h2 class="font-heading text-lg font-semibold mb-2">{i18n.t.remittance.walletsTitle}</h2>
+			<p class="text-xs text-muted-foreground mb-4">{i18n.t.remittance.walletsSubtitle}</p>
+			<WalletGuide filter="lightning" />
 		</div>
 	</div>
 {/if}
