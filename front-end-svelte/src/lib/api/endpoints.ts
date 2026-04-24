@@ -9,6 +9,8 @@ export const endpoints = {
     me: `${BASE}/auth/me`,
     lnurl: `${BASE}/auth/lnurl`,
     lnurlStatus: (k1: string) => `${BASE}/auth/lnurl-status?k1=${k1}`,
+    phoneSend: `${BASE}/auth/phone`,
+    phoneVerify: `${BASE}/auth/phone/verify`,
   },
   price: `${BASE}/price`,
   remittance: {
@@ -50,6 +52,7 @@ export const endpoints = {
     units: (locale: string) => `${BASE}/education/units?locale=${locale}`,
     progress: `${BASE}/education/progress`,
     loseHeart: `${BASE}/education/progress/lose-heart`,
+    gameComplete: `${BASE}/education/game/complete`,
   },
   liquid: {
     overview: `${BASE}/liquid/overview`,
@@ -71,5 +74,12 @@ export const endpoints = {
   },
   sends: {
     execute: `${BASE}/sends/execute`,
+  },
+  splits: {
+    list: `${BASE}/splits`,
+    create: `${BASE}/splits`,
+    byId: (id: number) => `${BASE}/splits/${id}`,
+    rules: (id: number) => `${BASE}/splits/${id}/rules`,
+    build: `${BASE}/splits/build`,
   },
 };
