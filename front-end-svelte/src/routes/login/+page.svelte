@@ -191,9 +191,8 @@
 
             <div class="space-y-2.5">
               <button
-                onclick={() => { auth.clearError(); view = 'phone'; }}
-                disabled={auth.isLoading}
-                class="group w-full flex items-center gap-4 rounded-xl border border-border bg-background hover:bg-secondary/50 hover:border-primary/40 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none px-4 py-3.5 transition-all"
+                disabled
+                class="group w-full flex items-center gap-4 rounded-xl border border-border bg-background opacity-50 cursor-not-allowed px-4 py-3.5"
               >
                 <span class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
                   <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -205,9 +204,6 @@
                   <span class="block font-medium text-sm text-foreground">{i18n.t.login.loginWithPhone}</span>
                   <span class="block text-xs text-muted-foreground mt-0.5">{i18n.t.login.loginPhoneDesc}</span>
                 </span>
-                <svg class="size-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
               </button>
 
               <button

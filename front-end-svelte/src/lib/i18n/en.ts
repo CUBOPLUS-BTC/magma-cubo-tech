@@ -208,9 +208,9 @@ export const en = {
   },
   login: {
     loginWithLightning: 'Lightning',
-    loginWithPhone: 'Phone',
+    loginWithPhone: 'Phone (beta)',
     loginWithNostr: 'Nostr',
-    loginPhoneDesc: 'Get a code via SMS',
+    loginPhoneDesc: 'In development — coming soon',
     loginLightningDesc: 'Connect your wallet with QR',
     loginNostrDesc: 'Sign with your Nostr key',
     welcomeBack: 'Welcome to Magma',

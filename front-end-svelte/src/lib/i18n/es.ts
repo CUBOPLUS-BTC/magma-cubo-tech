@@ -210,9 +210,9 @@ export const es: Translations = {
   },
   login: {
     loginWithLightning: 'Lightning',
-    loginWithPhone: 'Teléfono',
+    loginWithPhone: 'Teléfono (beta)',
     loginWithNostr: 'Nostr',
-    loginPhoneDesc: 'Recibí un código por SMS',
+    loginPhoneDesc: 'En desarrollo — próximamente',
     loginLightningDesc: 'Conectá tu wallet con QR',
     loginNostrDesc: 'Firmá con tu llave Nostr',
     welcomeBack: 'Bienvenido a Magma',
